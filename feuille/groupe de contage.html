@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MODELE INVENTER</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/responsive.dataTables.min.css">
+        <!-- مكتبة Excel (XLSX) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- مكتبات PDF (jspdf + jspdf-autotable) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+        }
+        th, td {
+            white-space: nowrap; /* Important pour le défilement horizontal */
+        }
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+  <!-- Navbar -->
+   <header class="header">
+    <nav class="navbar navbar-dark bg-dark ">
+     <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+     <svg xmlns="http://www.w3.org/2000/svg" width="33" height="33" fill="currentColor" class="bi bi-calculator-fill" viewBox="0 0 16 16">
+     <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2 .5v2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5m0 4v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 12.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M7.5 6a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM7 9.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m.5 2.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM10 6.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m.5 2.5a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5z"/>
+     </svg>
+      MY<span class="hi1">&</span>INVENTER</a>
+      <a href="./index.html">feuille principale</a>
+      <a href="./feuille/feuille contage 1.html">feuille COMPTAGE 1</a>
+      <a href="./feuille/feuille contage 2.html">feuille COMPTAGE 2</a>
+      <a href="">Image de stock-NAV</a>
+      <a href="">Image de stock-WMS</a>
+      
+      <li class="nav-item dropdown"
+      >
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" 
+            style="color: blue; ">
+              INVENTAIRE MANUEL
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark"
+            style="color: blue; text-decoration: solid;list-style-type: none;">
+              <li><a class="dropdown-item" href="#">os-liquedation</a></li>
+              <hr class="dropdown-divider">
+              <li><a class="dropdown-item" href="#">os-peking</a></li>
+              <hr class="dropdown-divider">
+              <li><a class="dropdown-item" href="#">os-assamblage</a></li>
+              
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="#">Bouskoura</a></li>
+            </ul>
+          </li>
+ 
+      
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel"
+    style="width: 20%;">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">
+           <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="currentColor" class="bi bi-house-gear" viewBox="0 0 16 16">
+           <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.708L8 2.207l-5 5V13.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 2 13.5V8.207l-.646.647a.5.5 0 1 1-.708-.708z"/>
+            <path d="M11.886 9.46c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.044c-.613-.181-.613-1.049 0-1.23l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
+          </svg>  Paramétres</h5>
+         
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+       <hr>
+      <div class="offcanvas-body k1" >
+        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+          <li class="nav-item">
+            <a class="nav-link active " aria-current="page" href="#">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-gear" viewBox="0 0 16 16">
+              <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m.256 7a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
+              </svg>
+                groupe de COMPTAGE </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" href="#">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-add" viewBox="0 0 16 16">
+              <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+              <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+              </svg>
+               CRÉER & COMPLÉTER</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-database" viewBox="0 0 16 16">
+            <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313M13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A5 5 0 0 0 13 5.698M14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13zm-1 4.698V10c0 .374-.356.875-1.318 1.313C10.766 11.729 9.464 12 8 12s-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10s3.022-.289 4.096-.777A5 5 0 0 0 13 8.698m0 3V13c0 .374-.356.875-1.318 1.313C10.766 14.729 9.464 15 8 15s-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13s3.022-.289 4.096-.777c.324-.147.633-.323.904-.525"/>
+             </svg>
+
+              Base donnes
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li><a class="dropdown-item" href="#">
+                <img src="./IMAGE/logo damandis (003) (1).ico" alt="DAMANDIS" width="30" height="30"> DAMANDIS
+              </a></li>
+              <li><a class="dropdown-item" href="#">
+                <img src="./IMAGE/WMS.ico" width="30" height="30"> 
+  
+                  WMS</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="#">
+               <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-archive-fill" viewBox="0 0 16 16">
+               <path d="M12.643 15C13.979 15 15 13.845 15 12.5V5H1v7.5C1 13.845 2.021 15 3.357 15zM5.5 7h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1M.8 1a.8.8 0 0 0-.8.8V3a.8.8 0 0 0 .8.8h14.4A.8.8 0 0 0 16 3V1.8a.8.8 0 0 0-.8-.8z"/>
+               </svg> 
+               Archive </a></li>
+            </ul>
+          </li>
+        </ul>
+        <div class="fixed-bottom"
+        style="direction: rtl;">
+           <button type="button" class="btn btn-outline-danger btn-sm " >
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-power" viewBox="0 0 16 16">
+          <path d="M7.5 1v7h1V1z"/>
+          <path d="M3 8.812a5 5 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812"/>
+          </svg>
+           Déconnexion</button>
+      </div>
+        </div>
+    </div>
+     </div>
+     
+     
+    </nav>
+
+   </header>
+    <main> 
+      <section class="w-100 d-block  ">
+        <h5>
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
+          <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+          <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+          <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+          </svg> feuille principale
+
+  
+  <!-- Bouton seulement -->
+  <button id="darkModeBtn">🌙</button>
+
+  
+
+
+        </h5>
+
+            
+      
+        </section>
+        <hr>
+        <!-- div de tableau -->
+
+        <div class="hicham">
+              <div class="zoui11">
+          <button type="button" class="btn-add btn btn-outline-primary btn-sm" id="btnAddEmplacement">➕ Ajouter une nouvelle Emplacement</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="btnViderTableau">🗑️ Vider le tableau</button>
+          <button onclick="location.reload()" type="button" class="btn btn-outline-success btn-sm" >Rafraîchir la page</button>
+          
+              </div>
+        
+
+             <!-- div de tableau 22 --> 
+    <div dir="rtl">
+          <button  id="btn-export-excel" type="icon" class="btn btn-success btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filetype-exe" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM2.575 15.202H.785v-1.073H2.47v-.606H.785v-1.025h1.79v-.648H0v3.999h2.575zM6.31 11.85h-.893l-.823 1.439h-.036l-.832-1.439h-.931l1.227 1.983-1.239 2.016h.861l.853-1.415h.035l.85 1.415h.908l-1.254-1.992zm1.025 3.352h1.79v.647H6.548V11.85h2.576v.648h-1.79v1.025h1.684v.606H7.334v1.073Z"/>
+            </svg>
+          </button >
+            <button id="btn-export-pdf" type="icon" class="btn btn-light btn-sm  " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-filetype-pdf" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM1.6 11.85H0v3.999h.791v-1.342h.803q.43 0 .732-.173.305-.175.463-.474a1.4 1.4 0 0 0 .161-.677q0-.375-.158-.677a1.2 1.2 0 0 0-.46-.477q-.3-.18-.732-.179m.545 1.333a.8.8 0 0 1-.085.38.57.57 0 0 1-.238.241.8.8 0 0 1-.375.082H.788V12.48h.66q.327 0 .512.181.185.183.185.522m1.217-1.333v3.999h1.46q.602 0 .998-.237a1.45 1.45 0 0 0 .595-.689q.196-.45.196-1.084 0-.63-.196-1.075a1.43 1.43 0 0 0-.589-.68q-.396-.234-1.005-.234zm.791.645h.563q.371 0 .609.152a.9.9 0 0 1 .354.454q.118.302.118.753a2.3 2.3 0 0 1-.068.592 1.1 1.1 0 0 1-.196.422.8.8 0 0 1-.334.252 1.3 1.3 0 0 1-.483.082h-.563zm3.743 1.763v1.591h-.79V11.85h2.548v.653H7.896v1.117h1.606v.638z"/>
+            </svg>
+          </button>
+          <button id="btn-save-refresh"  type="icon" class="btn btn-primary btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+            <path d="M11 2H9v3h2z"/>
+            <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+            </svg>
+          </button >
+          <button   type="icon" class="btn btn-info btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-archive" viewBox="0 0 16 16">
+            <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+            </svg>
+           
+          </button >
+
+    </div>
+
+        </div>     
+    <hr>
+             
+
+    
+    
+        
+
+    </main>
+    
+  <!-- jQuery + DataTables JS -->
+ 
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#stockTable').DataTable({
+            // Défilement vertical
+            scrollY: "70vh",        // Hauteur du tableau (70% de la hauteur visible)
+            scrollCollapse: true,
+
+            // Défilement horizontal
+            scrollX: true,
+
+            // Options recommandées pour un grand tableau
+            paging: true,
+            pageLength: 100,        // Nombre de lignes par page
+            lengthMenu: [50, 100, 250, 500, 1000],
+            
+            searching: true,
+            ordering: true,
+            info: true,
+
+            // Fixer les premières colonnes (optionnel)
+            fixedColumns: {
+                left: 2     // Fixe les 2 premières colonnes (ID + Emplacement)
+            },
+
+            // Langue française
+            language: {
+                url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/fr-FR.json"
+            },
+
+            // Amélioration de l'affichage sur mobile
+            responsive: false   // désactivé car on veut le scroll horizontal
+        });
+    });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+<script>
+const btn = document.getElementById('darkModeBtn');
+const body = document.body;
+
+// Charger le thème sauvegardé
+if (localStorage.getItem('theme') === 'dark' || 
+    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  body.setAttribute('data-theme', 'dark');
+  btn.textContent = '☀️';
+}
+
+// Au clic sur le bouton
+btn.addEventListener('click', () => {
+  if (body.getAttribute('data-theme') === 'dark') {
+    body.removeAttribute('data-theme');
+    btn.textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+  } else {
+    body.setAttribute('data-theme', 'dark');
+    btn.textContent = '☀️';
+    localStorage.setItem('theme', 'dark');
+  }
+});
+</script>
+
+<script>
+// ==================== حفظ واسترجاع بيانات الجدول تلقائياً ====================
+// يستعمل واجهة DataTables نفسها حتى يبقى العرض والبيانات متزامنين دائما
+const STOCK_STORAGE_KEY = 'stockTableData_v1';
+
+$(document).ready(function() {
+    const table = $('#stockTable').DataTable();
+
+    // حفظ كل بيانات الجدول الحالية في localStorage
+    function saveStockTable() {
+        try {
+            const data = table.rows().data().toArray();
+            localStorage.setItem(STOCK_STORAGE_KEY, JSON.stringify(data));
+        } catch (e) {
+            console.error('خطأ أثناء حفظ الجدول:', e);
+        }
+    }
+
+    // استرجاع البيانات المحفوظة (إن وجدت) وتحميلها في الجدول
+    function loadStockTable() {
+        const saved = localStorage.getItem(STOCK_STORAGE_KEY);
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            table.clear();
+            table.rows.add(data);
+            table.draw(false);
+        } catch (e) {
+            console.error('خطأ أثناء تحميل الجدول:', e);
+        }
+    }
+
+    // 1. تحميل آخر نسخة محفوظة عند فتح الصفحة
+    loadStockTable();
+
+    // 2. حفظ تلقائي في كل مرة يتغيّر فيها الجدول (إضافة سطر، تفريغ، تعديل...)
+    table.on('draw.dt', saveStockTable);
+
+    // إتاحة الدالة لبقية السكريبتات (مثلا زر "Rafraîchir la page")
+    window.saveStockTable = saveStockTable;
+});
+</script>
+<script>
+    
+// ====================== FILTRE PERSONNALISÉ + AUTOCOMPLETE ======================
+$(document).ready(function() {
+    const table = $('#stockTable').DataTable();
+
+    // === 1. جلب القيم الفريدة للموقع ===
+    function getUniqueEmplacements() {
+        const emplacements = new Set();
+        // العمود 1 = Emplacement
+        table.column(1).data().each(function(value) {  
+            if (value && value.toString().trim() !== '') {
+                emplacements.add(value.toString().trim());
+            }
+        });
+        return Array.from(emplacements).sort();
+    }
+
+    // === 2. تهيئة الإكمال التلقائي ===
+    function initAutocomplete() {
+        const $input = $('#filterEmplacement');
+        if (!$input.length) return; // حماية في حال عدم وجود عنصر الإدخال
+
+        const emplacements = getUniqueEmplacements();
+
+        // تحديث القائمة إذا كان الإكمال التلقائي مفعلاً مسبقاً
+        if ($input.data('ui-autocomplete')) {
+            $input.autocomplete('option', 'source', emplacements);
+        } else {
+            $input.autocomplete({
+                source: emplacements,
+                minLength: 1,
+                delay: 100,
+                select: function(event, ui) {
+                    setTimeout(() => $('#btnRecherche').trigger('click'), 100);
+                }
+            });
+        }
+    }
+
+    // === 3. زر البحث وتطبيق الفلاتر ===
+    $('#btnRecherche').on('click', function() {
+        // حماية ضد القيم الفارغة أو undefined
+        const emplacement = $('#filterEmplacement').val() ? $('#filterEmplacement').val().trim() : '';
+        const codeProduit = $('#filterCodeProduit').val() ? $('#filterCodeProduit').val().trim() : '';
+        const description = $('#filterDescription').val() ? $('#filterDescription').val().trim() : '';
+        const contenant   = $('#filterNumeroContenant').val() ? $('#filterNumeroContenant').val().trim() : '';
+        const statut      = $('#filterStatut').val() ? $('#filterStatut').val().toLowerCase().trim() : '';
+
+        // إعادة ضبط البحث على الأعمدة
+        table.columns().search('');
+
+        // تطبيق البحث على كل عمود مستهدف
+        if (emplacement) table.column(1).search(emplacement, true, false);
+        if (codeProduit) table.column(2).search(codeProduit, true, false);
+        if (description) table.column(3).search(description, true, false);
+        if (contenant)   table.column(6).search('^' + contenant + '$', true, false);
+        if (statut)      table.column(10).search(statut, true, false);
+
+        // إعادة رسم الجدول بالنتائج الجديدة
+        table.draw();
+    });
+
+    // === 4. زر إعادة الضبط ===
+    $('#btnReset').on('click', function() {
+        $('#filterEmplacement, #filterCodeProduit, #filterDescription, #filterNumeroContenant, #filterStatut').val('');
+        table.columns().search('').draw();
+        table.search('').draw();
+    });
+
+    // === 5. البحث الفوري عند التغيير ===
+    $('#filterNumeroContenant, #filterStatut').on('change keyup', function() {
+        $('#btnRecherche').trigger('click');
+    });
+
+    // === 6. تشغيل الإكمال التلقائي لأول مرة ===
+    setTimeout(() => {
+        initAutocomplete();
+    }, 500);
+
+    // === 7. تحديث القائمة التلقائية عند تغيير بيانات الجدول ===
+    table.on('draw.dt', function() {
+        initAutocomplete();
+    });
+});
+
+
+$(document).ready(function() {
+    // Récupère l'instance DataTable déjà initialisée sur #stockTable
+    const table = $('#stockTable').DataTable();
+
+    // ==========================================
+    // 1. Bouton ➕ Ajouter un nouvel emplacement
+    //    Ajoute une ligne vide à la fin du tableau
+    // ==========================================
+    $('#btnAddEmplacement').on('click', function() {
+        // Calcul automatique de l'ID de la nouvelle ligne
+        const totalRows = table.rows().count();
+        const newId = totalRows + 1;
+
+        // Nombre de colonnes du tableau (11 au total : ID + Emplacement + 9 autres)
+        const nbColonnes = table.columns().count();
+
+        // ID rempli automatiquement, toutes les autres colonnes vides
+        const newRowData = new Array(nbColonnes).fill("");
+        newRowData[0] = newId; // Colonne 0 : ID
+
+        // Ajout de la ligne à la fin du tableau et réaffichage
+        table.row.add(newRowData).draw(false);
+
+        // Aller sur la dernière page (si pagination) et défiler jusqu'à la nouvelle ligne
+        table.page('last').draw('page');
+        const lastRowNode = table.row(':last').node();
+        if (lastRowNode) {
+            lastRowNode.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    });
+
+
+    // ==========================================
+    // 2. Bouton 🗑️ Effacer le tableau
+    //    Vide toutes les colonnes sauf ID (0) et Emplacement (1)
+    // ==========================================
+    $('#btnViderTableau').on('click', function() {
+        // Fenêtre de confirmation avant l'effacement
+        if (confirm("Voulez-vous vraiment effacer le contenu du tableau ? (ID et Emplacement seront conservés)")) {
+
+            // Parcours de toutes les lignes du tableau
+            table.rows().every(function() {
+                let rowData = this.data();
+
+                // Effacement de toutes les colonnes à partir de l'index 2 (on garde ID et Emplacement)
+                for (let i = 2; i < rowData.length; i++) {
+                    rowData[i] = "";
+                }
+
+                // Mise à jour des données de la ligne
+                this.data(rowData);
+            });
+
+            // Réaffichage du tableau
+            table.draw(false);
+
+            // Confirmation de l'opération
+            alert("Le tableau a été effacé avec succès (ID et Emplacement conservés) !");
+        }
+    });
+
+});
+</script>
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    // زر تصدير PDF
+    document.getElementById("btn-export-pdf").addEventListener("click", function () {
+        let table = document.querySelector("table");
+        if (!table) return alert("لم يتم العثور على أي جدول!");
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'pt', 'a4');
+
+        doc.autoTable({
+            html: table,
+            theme: 'grid',
+            styles: { fontSize: 7, halign: 'center' },
+            headStyles: { fillColor: [40, 167, 69] }
+        });
+
+        doc.save("Inventaire_Data.pdf");
+    });
+
+    // زر "حفظ وتحديث" : يستعمل نفس نظام الحفظ التلقائي للجدول (DataTables) ثم يعيد تحميل الصفحة
+    document.getElementById("btn-save-refresh").addEventListener("click", function () {
+        if (window.saveStockTable) {
+            window.saveStockTable();
+        }
+        location.reload();
+    });
+
+});
+</script>
+<script>
+    
+</script>
+<!-- مكتبات التصدير (PDF & Excel) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tableBody = document.querySelector("table tbody");
+
+    // 1. دالة حفظ هيكل الجدول وبياناته كاملة في التخزين المحلي
+    function saveTableState() {
+        if (!tableBody) return;
+
+        // تحديث قيم attributes قبل الحفظ لضمان حفظ النص المكتوب داخل input
+        document.querySelectorAll("table tbody input, table tbody select").forEach(input => {
+            input.setAttribute("value", input.value);
+        });
+
+        // حفظ كود الصفوف الحالية
+        localStorage.setItem("inventory_table_rows", tableBody.innerHTML);
+    }
+
+    // 2. دالة استرجاع بيانات الجدول عند فتح/تحديث الصفحة
+    function loadTableState() {
+        const savedRows = localStorage.getItem("inventory_table_rows");
+        if (savedRows && tableBody) {
+            tableBody.innerHTML = savedRows;
+
+            // إعادة ربط القيمة بالـ input بعد الاسترجاع
+            tableBody.querySelectorAll("input, select").forEach(input => {
+                const val = input.getAttribute("value");
+                if (val !== null) input.value = val;
+            });
+        }
+    }
+
+    // استرجاع البيانات المحفوظة فور تحميل الصفحة
+    loadTableState();
+
+    // 3. ربط زر إضافة موقع جديد (➕ Ajouter une nouvelle Emplacement) بالحفظ التلقائي
+    document.querySelectorAll("button, a").forEach(btn => {
+        if (btn.textContent.includes("Ajouter") || btn.textContent.includes("Emplacement")) {
+            btn.addEventListener("click", function () {
+                // الانتظار قليلاً حتى يتم إنشاء السطر في الجدول ثم حفظه
+                setTimeout(saveTableState, 150);
+            });
+        }
+    });
+
+    // 4. ربط زر تفريغ الجدول (🗑️ Vider le tableau) بالحفظ التلقائي
+    document.querySelectorAll("button, a").forEach(btn => {
+        if (btn.textContent.includes("Vider") || btn.textContent.includes("تفريغ")) {
+            btn.addEventListener("click", function () {
+                setTimeout(saveTableState, 150);
+            });
+        }
+    });
+
+    // 5. حفظ تلقائي لحظي عند الكتابة أو تغيير أي خانة داخل الجدول
+    if (tableBody) {
+        tableBody.addEventListener("input", function (e) {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") {
+                e.target.setAttribute("value", e.target.value);
+                saveTableState();
+            }
+        });
+    }
+
+    // 6. زر تحديث الصفحة (Rafraîchir la page)
+    document.querySelectorAll("button, a").forEach(btn => {
+        if (btn.textContent.includes("Rafraîchir") || btn.textContent.includes("تحديث")) {
+            btn.addEventListener("click", function () {
+                saveTableState();
+                location.reload();
+            });
+        }
+    });
+
+    // ------------------------------------
+    // 7. زر تصدير الجدول إلى PDF مع قراءة القيم من input
+    // ------------------------------------
+    const pdfBtn = document.getElementById("btn-export-pdf") || document.querySelector(".btn-light");
+    if (pdfBtn) {
+        pdfBtn.addEventListener("click", function () {
+            let table = document.querySelector("table");
+            if (!table) return alert("لم يتم العثور على أي جدول!");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'pt', 'a4');
+
+            doc.autoTable({
+                html: table,
+                theme: 'grid',
+                styles: { fontSize: 7, halign: 'center' },
+                headStyles: { fillColor: [40, 167, 69] },
+                didParseCell: function (data) {
+                    if (data.cell.raw) {
+                        let input = data.cell.raw.querySelector('input, select, textarea');
+                        if (input) {
+                            data.cell.text = input.value || '';
+                        }
+                    }
+                }
+            });
+
+            doc.save("Inventaire_Data.pdf");
+        });
+    }
+
+    // ------------------------------------
+    // 8. زر تصدير الجدول إلى Excel
+    // ------------------------------------
+    const excelBtn = document.getElementById("btn-export-excel") || document.querySelector(".btn-success");
+    if (excelBtn) {
+        excelBtn.addEventListener("click", function () {
+            let table = document.querySelector("table");
+            if (!table) return alert("لم يتم العثور على أي جدول!");
+
+            let wb = XLSX.utils.table_to_book(table, { sheet: "Inventaire" });
+            XLSX.writeFile(wb, "Inventaire_Data.xlsx");
+        });
+    }
+});
+</script>
+
+  </body>
+
+</html>
+

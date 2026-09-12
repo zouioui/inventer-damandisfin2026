@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Répartition Terminaux — Damandis</title>
+<style>
+:root{--blue-dark:#0C447C;--blue-mid:#185FA5;--blue-light:#E6F1FB;--green:#1D9E75;--green-light:#E1F5EE;--red:#E24B4A;--red-light:#FCEBEB;--amber:#EF9F27;--amber-light:#FAEEDA;--text:#1a1a1a;--text2:#555;--text3:#888;--bg:#fff;--bg2:#f5f4f0;--bg3:#eeede8;--border:rgba(0,0,0,0.15);--border2:rgba(0,0,0,0.25);--r:8px;--rl:12px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:#e8e7e2;color:var(--text);}
+.wrap{max-width:1100px;margin:0 auto;padding:16px;}
+.app-header{background:var(--blue-dark);padding:16px 20px;border-radius:var(--rl);margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.app-header h1{color:#E6F1FB;font-size:17px;font-weight:700;flex:1;}
+.app-header .sub{color:rgba(230,241,251,.7);font-size:12px;width:100%;margin-top:-6px;}
+.save-badge{font-size:11px;color:#5DCAA5;background:rgba(93,202,165,.15);padding:4px 10px;border-radius:999px;border:1px solid rgba(93,202,165,.3);font-weight:700;white-space:nowrap;}
+.card{background:var(--bg);border-radius:var(--rl);border:.5px solid var(--border);box-shadow:0 2px 10px rgba(0,0,0,.05);margin-bottom:14px;overflow:hidden;}
+.card-head{padding:13px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;background:var(--blue-light);}
+.card-head h2{font-size:14px;font-weight:700;color:var(--blue-dark);}
+.card-body{padding:16px 18px;}
+.hint{font-size:12px;color:var(--text3);margin-top:4px;line-height:1.5;}
+textarea{width:100%;min-height:90px;border:1px solid var(--border2);border-radius:var(--r);padding:10px 12px;font-family:inherit;font-size:13px;resize:vertical;background:var(--bg2);}
+textarea:focus{outline:none;border-color:var(--blue-mid);background:var(--bg);}
+input[type=text],input[type=number]{height:38px;padding:0 10px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg2);font-family:inherit;font-size:13px;}
+input:focus{outline:none;border-color:var(--blue-mid);background:var(--bg);}
+select{height:38px;padding:0 8px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);font-family:inherit;font-size:13px;}
+.btn{height:38px;padding:0 16px;border:none;border-radius:var(--r);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:opacity .15s,transform .1s;}
+.btn:active{transform:scale(.97);}
+.btn-blue{background:var(--blue-dark);color:#E6F1FB;}
+.btn-blue:hover{background:var(--blue-mid);}
+.btn-green{background:var(--green);color:#fff;}
+.btn-green:hover{opacity:.9;}
+.btn-amber{background:var(--amber);color:#fff;}
+.btn-amber:hover{opacity:.9;}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--text2);}
+.btn-ghost:hover{background:var(--bg3);}
+.btn-red-ghost{background:transparent;border:1px solid var(--red);color:var(--red);}
+.btn-red-ghost:hover{background:var(--red-light);}
+.row-flex{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.passage-tabs{display:flex;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:3px;gap:4px;}
+.passage-tab{flex:1;border:none;background:transparent;border-radius:6px;height:36px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;font-family:inherit;}
+.passage-tab.active{background:var(--blue-dark);color:#E6F1FB;}
+.passage-tab.active.p2{background:var(--amber);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{background:var(--bg2);color:var(--text2);padding:8px 10px;text-align:left;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border);}
+tbody td{padding:7px 10px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+tbody tr:hover{background:var(--blue-light);}
+.zone-code{font-weight:700;color:var(--blue-dark);}
+.count-input{width:80px;text-align:center;}
+.term-select{width:140px;}
+.table-wrap{overflow-x:auto;border-radius:var(--r);border:.5px solid var(--border);}
+.empty-state{text-align:center;padding:30px 16px;color:var(--text3);font-size:13px;}
+.terminal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;}
+.term-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;}
+.term-card .tname{font-size:12px;font-weight:700;color:var(--blue-dark);margin-bottom:4px;}
+.term-card .tcount{font-size:20px;font-weight:700;}
+.term-card .tcount.warn{color:var(--amber);}
+.term-card .tzones{font-size:11px;color:var(--text3);margin-top:3px;line-height:1.4;word-break:break-word;}
+.fiche-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
+.fiche{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;page-break-inside:avoid;}
+.fiche-num{display:inline-block;background:var(--blue-dark);color:#fff;font-weight:700;font-size:13px;padding:4px 12px;border-radius:999px;margin-bottom:8px;}
+.fiche-sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin-top:8px;}
+.fiche-sec.c2{color:var(--amber);}
+.fiche-zones{font-size:13px;margin-top:3px;}
+.fiche-total{font-size:11px;color:var(--text3);margin-top:2px;}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700;}
+.pill-ok{background:var(--green-light);color:#085041;}
+.pill-warn{background:var(--amber-light);color:#633806;}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green);color:#fff;padding:11px 18px;border-radius:var(--r);font-size:13px;font-weight:700;z-index:9999;transition:transform .3s cubic-bezier(.22,1,.36,1);box-shadow:0 4px 16px rgba(0,0,0,.18);white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+.btn-del-row{background:transparent;border:none;color:var(--red);font-size:14px;cursor:pointer;padding:2px 6px;}
+@media print{
+  .no-print{display:none!important;}
+  body{background:#fff;}
+  .wrap{max-width:100%;padding:0;}
+  .card{box-shadow:none;border:none;}
+  .fiche{border:1px solid #999;}
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="app-header">
+    <h1>📦 Répartition des terminaux — Inventaire Damandis</h1>
+    <span class="sub">Décidez quelles zones et quel comptage sont affectés à chacun des 10 terminaux</span>
+    <span class="save-badge" id="save-badge">● Sauvegardé localement</span>
+  </div>
+
+  <!-- IMPORT / SAISIE DES ZONES -->
+  <div class="card no-print">
+    <div class="card-head"><h2>1 — Zones à inventorier</h2></div>
+    <div class="card-body">
+      <div class="row-flex" style="margin-bottom:10px;">
+        <label class="btn btn-blue" style="display:inline-flex;align-items:center;">
+          ⬆ Importer Excel/CSV
+          <input type="file" id="import-file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="importerFichier(this)">
+        </label>
+        <button class="btn btn-ghost" onclick="toggleColle()">📋 Coller une liste d'emplacements</button>
+        <button class="btn btn-red-ghost" onclick="reinitialiser()">↺ Réinitialiser tout</button>
+      </div>
+      <div class="hint" style="margin-bottom:6px;">L'import détecte automatiquement la colonne "Emplacement" et regroupe par zone (le préfixe avant le tiret, ex: <b>A1-01-03</b> → zone <b>A1</b>).</div>
+
+      <div id="colle-zone" style="display:none;margin-bottom:12px;">
+        <textarea id="colle-text" placeholder="Collez ici une liste d'emplacements, un par ligne (ex: A1-01-1A)"></textarea>
+        <div class="row-flex" style="margin-top:8px;">
+          <button class="btn btn-green" onclick="traiterColle()">Analyser la liste</button>
+        </div>
+      </div>
+
+      <div class="row-flex" style="margin-bottom:10px;">
+        <input type="text" id="manual-zone" placeholder="Code zone (ex: Q2)" style="width:160px;">
+        <input type="number" id="manual-count" placeholder="Nb emplacements" style="width:160px;" min="1">
+        <button class="btn btn-ghost" onclick="ajouterZoneManuelle()">+ Ajouter une zone</button>
+      </div>
+
+      <div id="import-info" style="display:none;font-size:12px;padding:8px 12px;border-radius:var(--r);margin-bottom:10px;border:.5px solid;"></div>
+      <div class="hint" id="zones-total"></div>
+    </div>
+  </div>
+
+  <!-- REPARTITION PAR PASSAGE -->
+  <div class="card">
+    <div class="card-head">
+      <h2>2 — Affectation Terminal × Zone</h2>
+      <div class="passage-tabs no-print" style="width:240px;">
+        <button class="passage-tab active" id="tab-c1" onclick="switchPassage('1')">Comptage 1</button>
+        <button class="passage-tab p2" id="tab-c2" onclick="switchPassage('2')">Comptage 2</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="row-flex no-print" style="margin-bottom:12px;">
+        <button class="btn btn-amber" onclick="autoRepartir(currentPassage)">⚡ Auto-répartir (équilibré)</button>
+        <button class="btn btn-ghost" id="btn-rotate" onclick="autoRepartirRotation()" style="display:none;">🔄 Auto-répartir avec rotation (équipe différente du Comptage 1)</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Zone</th><th>Nb emplacements</th><th>Terminal assigné</th><th></th></tr></thead>
+          <tbody id="zones-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECAP PAR TERMINAL -->
+  <div class="card">
+    <div class="card-head"><h2>3 — Charge par terminal (<span id="recap-passage-label">Comptage 1</span>)</h2></div>
+    <div class="card-body">
+      <div class="terminal-grid" id="terminal-recap"></div>
+    </div>
+  </div>
+
+  <!-- FICHES TERMINAUX -->
+  <div class="card">
+    <div class="card-head">
+      <h2>4 — Fiches terminaux (vue d'ensemble C1 + C2)</h2>
+      <div class="row-flex no-print">
+        <button class="btn btn-ghost" onclick="window.print()">🖨️ Imprimer les fiches</button>
+        <button class="btn btn-blue" onclick="exportJSON()">⬇ Export config (JSON)</button>
+        <label class="btn btn-ghost" style="display:inline-flex;align-items:center;">
+          ⬆ Import config
+          <input type="file" id="import-json" accept=".json" style="display:none;" onchange="importerJSON(this)">
+        </label>
+        <button class="btn btn-green" onclick="exportCSV()">⬇ Export CSV</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="fiche-grid" id="fiches"></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const STORAGE_KEY="inv_repartition_config";
+let state={zones:{}, assign:{"1":{}, "2":{}}};
+let currentPassage="1";
+
+function loadState(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const parsed=JSON.parse(raw);
+      state.zones=parsed.zones||{};
+      state.assign={"1":(parsed.assign&&parsed.assign["1"])||{},"2":(parsed.assign&&parsed.assign["2"])||{}};
+    }
+  }catch(e){}
+}
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  const b=document.getElementById("save-badge");
+  b.textContent="● Sauvegardé "+new Date().toLocaleTimeString("fr-FR");
+}
+
+function zoneOf(emplacement){
+  const m=/^([A-Za-z0-9]+)-/.exec(emplacement.trim());
+  return m?m[1].toUpperCase():emplacement.trim().toUpperCase();
+}
+
+function showInfo(msg,isError){
+  const el=document.getElementById("import-info");
+  el.innerHTML=msg;el.style.display="block";
+  el.style.color=isError?"var(--red)":"var(--green)";
+  el.style.borderColor=isError?"rgba(226,75,74,.4)":"rgba(29,158,117,.4)";
+  el.style.background=isError?"var(--red-light)":"var(--green-light)";
+  clearTimeout(window._it);window._it=setTimeout(()=>el.style.display="none",6000);
+}
+function showToast(msg,bg){
+  const t=document.getElementById("toast");
+  t.textContent=msg;t.style.background=bg||"var(--green)";
+  t.classList.add("show");
+  clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove("show"),2600);
+}
+
+function toggleColle(){
+  const z=document.getElementById("colle-zone");
+  z.style.display=z.style.display==="none"?"block":"none";
+}
+function traiterColle(){
+  const lines=document.getElementById("colle-text").value.split(/\r\n|\n|\r/).map(l=>l.trim()).filter(Boolean);
+  if(!lines.length){showInfo("⚠ Liste vide",true);return;}
+  let added=0;
+  lines.forEach(l=>{
+    const z=zoneOf(l);
+    state.zones[z]=(state.zones[z]||0)+1;
+  });
+  added=lines.length;
+  saveState();renderAll();
+  showInfo("✓ "+added+" emplacement(s) analysés, "+Object.keys(state.zones).length+" zone(s) au total");
+  document.getElementById("colle-text").value="";
+}
+
+function importerFichier(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      let rowsEmp=[];
+      const isCSV=file.name.toLowerCase().endsWith(".csv");
+      if(isCSV){
+        const text=new TextDecoder("utf-8").decode(new Uint8Array(e.target.result));
+        const lines=text.split(/\r\n|\n|\r/).filter(l=>l.trim());
+        const sep=lines[0].includes(";")?";":",";
+        const header=lines[0].split(sep).map(h=>h.replace(/^"|"$/g,"").trim().toLowerCase());
+        const ei=header.findIndex(h=>h.includes("emplacement"));
+        if(ei<0){showInfo("⚠ Colonne 'Emplacement' introuvable",true);return;}
+        for(let i=1;i<lines.length;i++){
+          const cols=lines[i].split(sep).map(c=>c.replace(/^"|"$/g,"").trim());
+          if(cols[ei])rowsEmp.push(cols[ei]);
+        }
+      } else {
+        const wb=XLSX.read(new Uint8Array(e.target.result),{type:"array"});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+        if(!rows.length){showInfo("⚠ Fichier vide",true);return;}
+        const keys=Object.keys(rows[0]);
+        const ekey=keys.find(k=>k.toLowerCase().includes("emplacement"))||keys[1]||keys[0];
+        rows.forEach(r=>{if(r[ekey])rowsEmp.push(String(r[ekey]));});
+      }
+      if(!rowsEmp.length){showInfo("⚠ Aucun emplacement trouvé",true);return;}
+      rowsEmp.forEach(e=>{
+        const z=zoneOf(e);
+        state.zones[z]=(state.zones[z]||0)+1;
+      });
+      saveState();renderAll();
+      showInfo("✓ "+rowsEmp.length+" emplacement(s) importés, "+Object.keys(state.zones).length+" zone(s) au total");
+    }catch(err){showInfo("⚠ Erreur: "+err.message,true);}
+    input.value="";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function ajouterZoneManuelle(){
+  const codeEl=document.getElementById("manual-zone"), countEl=document.getElementById("manual-count");
+  const code=codeEl.value.trim().toUpperCase();
+  const count=parseInt(countEl.value,10);
+  if(!code){showInfo("⚠ Code zone requis",true);return;}
+  if(!count||count<1){showInfo("⚠ Nombre d'emplacements requis",true);return;}
+  state.zones[code]=count;
+  codeEl.value="";countEl.value="";
+  saveState();renderAll();
+  showToast("✓ Zone "+code+" ajoutée");
+}
+
+function supprimerZone(code){
+  if(!confirm("Supprimer la zone "+code+" ?"))return;
+  delete state.zones[code];
+  delete state.assign["1"][code];
+  delete state.assign["2"][code];
+  saveState();renderAll();
+}
+
+function reinitialiser(){
+  if(!confirm("Réinitialiser toute la configuration (zones + affectations) ?"))return;
+  state={zones:{}, assign:{"1":{}, "2":{}}};
+  saveState();renderAll();
+  showToast("↺ Configuration réinitialisée","#E24B4A");
+}
+
+function switchPassage(p){
+  currentPassage=p;
+  document.getElementById("tab-c1").classList.toggle("active",p==="1");
+  document.getElementById("tab-c2").classList.toggle("active",p==="2");
+  document.getElementById("btn-rotate").style.display=(p==="2")?"inline-block":"none";
+  document.getElementById("recap-passage-label").textContent="Comptage "+p;
+  renderZonesTable();renderTerminalRecap();
+}
+
+function renderZonesTable(){
+  const tbody=document.getElementById("zones-body");
+  const codes=Object.keys(state.zones).sort();
+  if(!codes.length){
+    tbody.innerHTML='<tr><td colspan="4"><div class="empty-state">Aucune zone — importez un fichier ou ajoutez une zone manuellement ci-dessus.</div></td></tr>';
+    document.getElementById("zones-total").textContent="";
+    return;
+  }
+  const total=codes.reduce((s,c)=>s+state.zones[c],0);
+  document.getElementById("zones-total").textContent=codes.length+" zone(s) — "+total+" emplacement(s) au total";
+  tbody.innerHTML=codes.map(c=>{
+    const assigned=state.assign[currentPassage][c]||"";
+    const opts=['<option value="">— non assigné —</option>'].concat(
+      Array.from({length:10},(_,i)=>{
+        const v=String(i+1);
+        return `<option value="${v}" ${assigned===v?"selected":""}>Terminal ${v}</option>`;
+      })
+    ).join("");
+    return `<tr>
+      <td class="zone-code">${c}</td>
+      <td><input type="number" class="count-input" value="${state.zones[c]}" min="1" onchange="updateCount('${c}',this.value)"></td>
+      <td><select class="term-select" onchange="assignZone('${c}',this.value)">${opts}</select></td>
+      <td><button class="btn-del-row" onclick="supprimerZone('${c}')" title="Supprimer">🗑</button></td>
+    </tr>`;
+  }).join("");
+}
+
+function updateCount(code,val){
+  const n=parseInt(val,10);
+  state.zones[code]=n>0?n:1;
+  saveState();renderTerminalRecap();renderZonesTotal();
+}
+function renderZonesTotal(){
+  const codes=Object.keys(state.zones);
+  const total=codes.reduce((s,c)=>s+state.zones[c],0);
+  document.getElementById("zones-total").textContent=codes.length+" zone(s) — "+total+" emplacement(s) au total";
+}
+
+function assignZone(code,terminal){
+  if(terminal)state.assign[currentPassage][code]=terminal;
+  else delete state.assign[currentPassage][code];
+  saveState();renderTerminalRecap();renderFiches();
+}
+
+function autoRepartir(passage){
+  const codes=Object.keys(state.zones).sort((a,b)=>state.zones[b]-state.zones[a]);
+  if(!codes.length){showToast("Aucune zone à répartir","#E24B4A");return;}
+  const bins=Array(10).fill(0);
+  const assign={};
+  codes.forEach(c=>{
+    let idx=0,min=bins[0];
+    for(let i=1;i<10;i++)if(bins[i]<min){min=bins[i];idx=i;}
+    assign[c]=String(idx+1);
+    bins[idx]+=state.zones[c];
+  });
+  state.assign[passage]=assign;
+  saveState();renderZonesTable();renderTerminalRecap();renderFiches();
+  showToast("⚡ Répartition équilibrée appliquée (Comptage "+passage+")");
+}
+
+function autoRepartirRotation(){
+  const codesC1=Object.keys(state.assign["1"]);
+  if(!codesC1.length){showToast("Faites d'abord la répartition du Comptage 1","#E24B4A");return;}
+  const assign={};
+  Object.keys(state.zones).forEach(c=>{
+    const t1=parseInt(state.assign["1"][c],10);
+    if(t1){
+      const t2=((t1-1+5)%10)+1; // rotation de 5 postes : équipe différente
+      assign[c]=String(t2);
+    }
+  });
+  state.assign["2"]=assign;
+  saveState();renderZonesTable();renderTerminalRecap();renderFiches();
+  showToast("🔄 Rotation appliquée — Comptage 2 confié à une autre équipe que le Comptage 1");
+}
+
+function renderTerminalRecap(){
+  const grid=document.getElementById("terminal-recap");
+  const assign=state.assign[currentPassage];
+  const byTerm=Array.from({length:10},()=>({count:0,zones:[]}));
+  Object.keys(assign).forEach(c=>{
+    const t=parseInt(assign[c],10);
+    if(t>=1&&t<=10){byTerm[t-1].count+=state.zones[c]||0;byTerm[t-1].zones.push(c);}
+  });
+  const totals=byTerm.map(t=>t.count);
+  const max=Math.max(...totals,1);
+  grid.innerHTML=byTerm.map((t,i)=>{
+    const warn=t.count>0 && t.count>max*0.85 && max>0;
+    return `<div class="term-card">
+      <div class="tname">Terminal ${i+1}</div>
+      <div class="tcount">${t.count}</div>
+      <div class="tzones">${t.zones.length?t.zones.join(", "):"— aucune zone —"}</div>
+    </div>`;
+  }).join("");
+}
+
+function renderFiches(){
+  const grid=document.getElementById("fiches");
+  const c1=state.assign["1"], c2=state.assign["2"];
+  const fiches=[];
+  for(let t=1;t<=10;t++){
+    const zc1=Object.keys(c1).filter(c=>c1[c]===String(t));
+    const zc2=Object.keys(c2).filter(c=>c2[c]===String(t));
+    if(!zc1.length && !zc2.length)continue;
+    const tot1=zc1.reduce((s,c)=>s+(state.zones[c]||0),0);
+    const tot2=zc2.reduce((s,c)=>s+(state.zones[c]||0),0);
+    fiches.push(`<div class="fiche">
+      <span class="fiche-num">Terminal ${t}</span>
+      <div class="fiche-sec">Comptage 1</div>
+      <div class="fiche-zones">${zc1.length?zc1.join(", "):"—"}</div>
+      <div class="fiche-total">${tot1} emplacement(s)</div>
+      <div class="fiche-sec c2">Comptage 2</div>
+      <div class="fiche-zones">${zc2.length?zc2.join(", "):"—"}</div>
+      <div class="fiche-total">${tot2} emplacement(s)</div>
+    </div>`);
+  }
+  grid.innerHTML=fiches.length?fiches.join(""):'<div class="empty-state">Aucune affectation pour le moment.</div>';
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="config_repartition_terminaux_"+new Date().toISOString().split("T")[0]+".json";
+  a.click();
+  showToast("⬇ Configuration exportée");
+}
+function importerJSON(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const parsed=JSON.parse(e.target.result);
+      state.zones=parsed.zones||{};
+      state.assign={"1":(parsed.assign&&parsed.assign["1"])||{},"2":(parsed.assign&&parsed.assign["2"])||{}};
+      saveState();renderAll();
+      showToast("✓ Configuration importée");
+    }catch(err){showToast("⚠ Fichier invalide","#E24B4A");}
+    input.value="";
+  };
+  reader.readAsText(file);
+}
+function exportCSV(){
+  const codes=Object.keys(state.zones).sort();
+  if(!codes.length){showToast("Aucune donnée","#E24B4A");return;}
+  const h=["Zone","Nb emplacements","Terminal Comptage 1","Terminal Comptage 2"];
+  const rows=codes.map(c=>[c,state.zones[c],state.assign["1"][c]||"",state.assign["2"][c]||""].map(v=>'"'+String(v).replace(/"/g,"''")+'"').join(";"));
+  const csv="\uFEFF"+h.join(";")+String.fromCharCode(10)+rows.join(String.fromCharCode(10));
+  const a=document.createElement("a");
+  a.href="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+  a.download="repartition_terminaux_"+new Date().toISOString().split("T")[0]+".csv";
+  a.click();
+  showToast("⬇ Export CSV téléchargé");
+}
+
+function renderAll(){
+  renderZonesTable();
+  renderTerminalRecap();
+  renderFiches();
+}
+
+loadState();
+switchPassage("1");
+renderAll();
+</script>
+</body>
+</html>

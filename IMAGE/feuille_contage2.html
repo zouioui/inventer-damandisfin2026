@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feuille COMPTAGE 2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.1.8/css/responsive.dataTables.min.css">
+    
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+        }
+        th, td {
+            white-space: nowrap; /* Important pour le défilement horizontal */
+        }
+        .dataTables_wrapper {
+            margin-top: 20px;
+        }
+
+        /* تثبيت أول عمودين (ID و Emplacement) أثناء التمرير الأفقي */
+        #stockTable thead th:nth-child(1),
+        #stockTable tbody td:nth-child(1) {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background-color: #fff;
+        }
+        #stockTable thead th:nth-child(2),
+        #stockTable tbody td:nth-child(2) {
+            position: sticky;
+            left: 50px;   /* عرض العمود الأول تقريبًا؛ عدّله إذا لزم */
+            z-index: 2;
+            background-color: #fff;
+        }
+        #stockTable thead th:nth-child(1),
+        #stockTable thead th:nth-child(2) {
+            z-index: 3;   /* الرأس يبقى فوق الصفوف عند التمرير العمودي أيضًا */
+            background-color: #f8f9fa;
+        }
+        /* الحفاظ على تلوين الصفوف المتناوبة حتى في الأعمدة الثابتة */
+        #stockTable.display tbody tr:nth-child(odd) td:nth-child(1),
+        #stockTable.display tbody tr:nth-child(odd) td:nth-child(2) {
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+  <!-- Navbar -->
+   <header class="header">
+    <nav class="navbar navbar-dark bg-dark ">
+     <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasDarkNavbar" aria-controls="offcanvasDarkNavbar" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+     <svg xmlns="http://www.w3.org/2000/svg" width="33" height="33" fill="currentColor" class="bi bi-calculator-fill" viewBox="0 0 16 16">
+     <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2zm2 .5v2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5v-2a.5.5 0 0 0-.5-.5h-7a.5.5 0 0 0-.5.5m0 4v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M4.5 9a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 12.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5M7.5 6a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM7 9.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m.5 2.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM10 6.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5m.5 2.5a.5.5 0 0 0-.5.5v4a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 0-.5-.5z"/>
+     </svg>
+      MY<span class="hi1">&</span>INVENTER</a>
+      <a href="../index.html">feuille principale</a>
+      <a href="./feuille contage 1.html">feuille COMPTAGE 1</a>
+      <a href="./feuille contage 2.html">feuille COMPTAGE 2</a>
+      
+      
+      <li class="nav-item dropdown"
+      >
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" 
+            style="color: blue; ">
+              INVENTAIRE MANUEL
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark"
+            style="color: blue; text-decoration: solid;list-style-type: none;">
+              <li><a class="dropdown-item" href="#">os-liquedation</a></li>
+              <hr class="dropdown-divider">
+              <li><a class="dropdown-item" href="#">os-peking</a></li>
+              <hr class="dropdown-divider">
+              <li><a class="dropdown-item" href="#">os-assamblage</a></li>
+              
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="#">Bouskoura</a></li>
+            </ul>
+          </li>
+ 
+      
+    <div class="offcanvas offcanvas-end text-bg-dark" tabindex="-1" id="offcanvasDarkNavbar" aria-labelledby="offcanvasDarkNavbarLabel"
+    style="width: 20%;">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasDarkNavbarLabel">
+           <svg xmlns="http://www.w3.org/2000/svg" width="27" height="27" fill="currentColor" class="bi bi-house-gear" viewBox="0 0 16 16">
+           <path d="M7.293 1.5a1 1 0 0 1 1.414 0L11 3.793V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v3.293l2.354 2.353a.5.5 0 0 1-.708.708L8 2.207l-5 5V13.5a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 2 13.5V8.207l-.646.647a.5.5 0 1 1-.708-.708z"/>
+            <path d="M11.886 9.46c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.044c-.613-.181-.613-1.049 0-1.23l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
+          </svg>  Paramétres</h5>
+         
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+       <hr>
+      <div class="offcanvas-body k1" >
+        <ul class="navbar-nav justify-content-end flex-grow-1 pe-3">
+          <li class="nav-item">
+            <a class="nav-link active " aria-current="page" href="#">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-gear" viewBox="0 0 16 16">
+              <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m.256 7a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0"/>
+              </svg>
+                groupe de COMPTAGE </a>
+          </li>
+          
+          <li class="nav-item">
+            <a class="nav-link" href="#">
+              <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-person-add" viewBox="0 0 16 16">
+              <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0m-2-6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4"/>
+              <path d="M8.256 14a4.5 4.5 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10q.39 0 .74.025c.226-.341.496-.65.804-.918Q8.844 9.002 8 9c-5 0-6 3-6 4s1 1 1 1z"/>
+              </svg>
+               CRÉER & COMPLÉTER</a>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-database" viewBox="0 0 16 16">
+            <path d="M4.318 2.687C5.234 2.271 6.536 2 8 2s2.766.27 3.682.687C12.644 3.125 13 3.627 13 4c0 .374-.356.875-1.318 1.313C10.766 5.729 9.464 6 8 6s-2.766-.27-3.682-.687C3.356 4.875 3 4.373 3 4c0-.374.356-.875 1.318-1.313M13 5.698V7c0 .374-.356.875-1.318 1.313C10.766 8.729 9.464 9 8 9s-2.766-.27-3.682-.687C3.356 7.875 3 7.373 3 7V5.698c.271.202.58.378.904.525C4.978 6.711 6.427 7 8 7s3.022-.289 4.096-.777A5 5 0 0 0 13 5.698M14 4c0-1.007-.875-1.755-1.904-2.223C11.022 1.289 9.573 1 8 1s-3.022.289-4.096.777C2.875 2.245 2 2.993 2 4v9c0 1.007.875 1.755 1.904 2.223C4.978 15.71 6.427 16 8 16s3.022-.289 4.096-.777C13.125 14.755 14 14.007 14 13zm-1 4.698V10c0 .374-.356.875-1.318 1.313C10.766 11.729 9.464 12 8 12s-2.766-.27-3.682-.687C3.356 10.875 3 10.373 3 10V8.698c.271.202.58.378.904.525C4.978 9.71 6.427 10 8 10s3.022-.289 4.096-.777A5 5 0 0 0 13 8.698m0 3V13c0 .374-.356.875-1.318 1.313C10.766 14.729 9.464 15 8 15s-2.766-.27-3.682-.687C3.356 13.875 3 13.373 3 13v-1.302c.271.202.58.378.904.525C4.978 12.71 6.427 13 8 13s3.022-.289 4.096-.777c.324-.147.633-.323.904-.525"/>
+             </svg>
+
+              Base donnes
+            </a>
+            <ul class="dropdown-menu dropdown-menu-dark">
+              <li><a class="dropdown-item" href="#">
+                <img src="../IMAGE/logo damandis (003) (1).ico" alt="DAMANDIS" width="30" height="30"> DAMANDIS
+              </a></li>
+              <li><a class="dropdown-item" href="#">
+                <img src="../IMAGE/WMS.ico" width="30" height="30"> 
+  
+                  WMS</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="#">
+               <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-archive-fill" viewBox="0 0 16 16">
+               <path d="M12.643 15C13.979 15 15 13.845 15 12.5V5H1v7.5C1 13.845 2.021 15 3.357 15zM5.5 7h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1 0-1M.8 1a.8.8 0 0 0-.8.8V3a.8.8 0 0 0 .8.8h14.4A.8.8 0 0 0 16 3V1.8a.8.8 0 0 0-.8-.8z"/>
+               </svg> 
+               Archive </a></li>
+            </ul>
+          </li>
+        </ul>
+        <div class="fixed-bottom"
+        style="direction: rtl;">
+           <button type="button" class="btn btn-outline-danger btn-sm " >
+          <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" fill="currentColor" class="bi bi-power" viewBox="0 0 16 16">
+          <path d="M7.5 1v7h1V1z"/>
+          <path d="M3 8.812a5 5 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.616l-.501.865A5 5 0 1 1 3 8.812"/>
+          </svg>
+           Déconnexion</button>
+      </div>
+        </div>
+    </div>
+     </div>
+     
+     
+    </nav>
+
+   </header>
+    <main> 
+      <section class="w-100 d-block  ">
+        <h5>
+          <svg xmlns="http://www.w3.org/2000/svg" width="25" height="25" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
+          <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+          <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+          <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+          </svg> feuille COMPTAGE 2
+
+  
+  <!-- Bouton seulement -->
+  <button id="darkModeBtn">🌙</button>
+
+  
+
+
+        </h5>
+
+            
+          <!-- زر التحكم -->
+           <button class="border border btn btn-success mt-0 w-100 " 
+                   type= "icon" 
+                   data-bs-toggle="collapse" 
+                   data-bs-target="#horizontalCollapse" 
+                   aria-expanded="false" 
+                   aria-controls="horizontalCollapse">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-diff" viewBox="0 0 16 16">
+                   <path d="M8 5a.5.5 0 0 1 .5.5V7H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V8H6a.5.5 0 0 1 0-1h1.5V5.5A.5.5 0 0 1 8 5m-2.5 6.5A.5.5 0 0 1 6 11h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5"/>
+                   <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                   </svg> Filtre de recherche
+                    </button>
+
+           <!-- القسم القابل للطي أفقيًا -->
+           <div class=" collapse collapse-horizontal"   id="horizontalCollapse">
+             <div class="card card-body" style="width: 100%; align-self: start;">
+            <div style="width: 100%;"  >
+            <div class="row" > 
+             <div class="col">  
+                <input type="text" id="filterEmplacement" class="form-control" placeholder="Emplacement du produit" aria-label="Emplacement du produit"
+                style="font-size: small;width: 200px;">
+            </div>
+            <div class="col">
+                <input type="text" id="filterCodeProduit" class="form-control" placeholder="code Produit" aria-label="Ecode Produit "
+                style="font-size: small;width: 170px;">
+            </div>
+            <div class="col">
+                <input type="text" id="filterDescription" class="form-control " placeholder="Description" aria-label="Description"
+                style="font-size: small;width: 300px;">
+            </div>
+            <div class="col">
+                <input type="number" id="filterNumeroContenant" class="form-control" placeholder="N° de Contenant" aria-label="N° de Contenant"
+                style="font-size: small;width: 170px;"
+                >
+            </div>
+            
+             <div class="col">
+              
+                <span class="input-group-text " id="basic-addon1"
+                style="font-size: small;">Sutat :
+                <select class="form-select" id="filterStatut" required
+                style="font-size: small;">
+                <option selected disabled value="">Choose...</option>
+                <option>Stock</option>
+                <option>Vide</option>
+                </select>
+              </span> 
+            </div>
+            </div>
+            <div class=" mt-1 CENTER text-center">
+              <button type="button " class="px-3 btn btn-primary btn-sm" id="btnReset"
+              
+              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-repeat" viewBox="0 0 16 16">
+              <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41m-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9"/>
+              <path fill-rule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.9A5 5 0 0 0 8 3M3.1 9a5.002 5.002 0 0 0 8.757 2.182.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9z"/>
+              </svg> Réinitialiser</button> 
+              <button type="button" class="btn btn-success btn-sm" id="btnRecherche" >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                </svg>
+                Recherche</button>  
+            </div>
+
+         </div>
+             </div>
+           </div>
+        </section>
+        <hr>
+        <!-- div de tableau -->
+
+        <div class="hicham">
+              <div class="zoui11">
+          <button type="button" class="btn-add btn btn-outline-primary btn-sm" id="btnAddEmplacement">➕ Ajouter une nouvelle Emplacement</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" id="btnViderTableau">🗑️ Vider le tableau</button>
+          <button onclick="location.reload()" type="button" class="btn btn-outline-success btn-sm" >Rafraîchir la page</button>
+          
+              </div>
+        
+
+             <!-- div de tableau 22 --> 
+    <div dir="rtl">
+          <button  id="btn-export-excel" type="icon" class="btn btn-success btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-filetype-exe" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM2.575 15.202H.785v-1.073H2.47v-.606H.785v-1.025h1.79v-.648H0v3.999h2.575zM6.31 11.85h-.893l-.823 1.439h-.036l-.832-1.439h-.931l1.227 1.983-1.239 2.016h.861l.853-1.415h.035l.85 1.415h.908l-1.254-1.992zm1.025 3.352h1.79v.647H6.548V11.85h2.576v.648h-1.79v1.025h1.684v.606H7.334v1.073Z"/>
+            </svg>
+          </button >
+            <button id="btn-export-pdf" type="icon" class="btn btn-light btn-sm  " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-filetype-pdf" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M14 4.5V14a2 2 0 0 1-2 2h-1v-1h1a1 1 0 0 0 1-1V4.5h-2A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v9H2V2a2 2 0 0 1 2-2h5.5zM1.6 11.85H0v3.999h.791v-1.342h.803q.43 0 .732-.173.305-.175.463-.474a1.4 1.4 0 0 0 .161-.677q0-.375-.158-.677a1.2 1.2 0 0 0-.46-.477q-.3-.18-.732-.179m.545 1.333a.8.8 0 0 1-.085.38.57.57 0 0 1-.238.241.8.8 0 0 1-.375.082H.788V12.48h.66q.327 0 .512.181.185.183.185.522m1.217-1.333v3.999h1.46q.602 0 .998-.237a1.45 1.45 0 0 0 .595-.689q.196-.45.196-1.084 0-.63-.196-1.075a1.43 1.43 0 0 0-.589-.68q-.396-.234-1.005-.234zm.791.645h.563q.371 0 .609.152a.9.9 0 0 1 .354.454q.118.302.118.753a2.3 2.3 0 0 1-.068.592 1.1 1.1 0 0 1-.196.422.8.8 0 0 1-.334.252 1.3 1.3 0 0 1-.483.082h-.563zm3.743 1.763v1.591h-.79V11.85h2.548v.653H7.896v1.117h1.606v.638z"/>
+            </svg>
+          </button>
+          <button id="btn-save-refresh"  type="icon" class="btn btn-primary btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-floppy" viewBox="0 0 16 16">
+            <path d="M11 2H9v3h2z"/>
+            <path d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v4.5A1.5 1.5 0 0 1 11.5 7h-7A1.5 1.5 0 0 1 3 5.5V1H1.5a.5.5 0 0 0-.5.5m3 4a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 .5-.5V1H4zM3 15h10v-4.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5z"/>
+            </svg>
+          </button >
+          <button   type="icon" class="btn btn-info btn-sm " >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-archive" viewBox="0 0 16 16">
+            <path d="M0 2a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1v7.5a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 1 12.5V5a1 1 0 0 1-1-1zm2 3v7.5A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5V5zm13-3H1v2h14zM5 7.5a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+            </svg>
+           
+          </button >
+
+    </div>
+
+        </div>     
+    <hr>
+       <table id="stockTable" class="display table table-bordered" style="width:100%">
+        <thead >
+            <tr>
+                <th>ID</th>
+                <th>Emplacement</th>   
+                <th>Code Produit</th>
+                <th>Description</th>
+                <th>Unité</th>
+                <th>Date limite consom.</th>
+                <th>N° de Contenant</th>
+                <th>Lot</th>
+                <th>COMPTAGE 2</th>
+                <th>ACTION</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+       </table>
+        <!-- div de tableau 3 -->             
+   
+    
+    
+        
+
+    </main>
+    
+  <!-- jQuery + DataTables JS -->
+ 
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/smoothness/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+<script src="https://cdn.datatables.net/2.1.8/js/dataTables.min.js"></script>
+
+<!-- بيانات المخزون (تم فصلها عن HTML لتسريع تحميل الصفحة) -->
+<script src="../data.js"></script>
+<!-- ==================== STATUS تلقائي + الجدول كامل ==================== -->
+<script>
+    // أعمدة الفحص: Code Produit, Description, Unité, Date, Contenant, Lot, COMPTAGE 2 (ID و Emplacement مستثنيين)
+    const STATUS_CHECK_COLS = [2, 3, 4, 5, 6, 7, 8];
+    const STATUS_COL = 10;
+    const ACTION_COL = 9;
+    const ID_COL = 0;
+
+    function computeStatus(rowData) {
+        const allFilled = STATUS_CHECK_COLS.every(function (i) {
+            const v = rowData[i];
+            return v !== null && v !== undefined && String(v).trim() !== '';
+        });
+        return allFilled ? 'Stock' : 'Vide';
+    }
+
+    function applyStatusToRows(rows) {
+        if (!Array.isArray(rows)) return rows;
+        return rows.map(function (row) {
+            const r = Array.isArray(row) ? row.slice() : row;
+            r[STATUS_COL] = computeStatus(r);
+            return r;
+        });
+    }
+
+    function escapeHtml(str) {
+        return $('<div>').text(str === null || str === undefined ? '' : str).html();
+    }
+</script>
+
+<script>
+$(document).ready(function () {
+    // ----- 1. تهيئة الجدول -----
+    var initialData = (typeof STOCK_DATA !== 'undefined') ? applyStatusToRows(STOCK_DATA) : [];
+
+    window.stockTable = $('#stockTable').DataTable({
+        data: initialData,
+        deferRender: true,
+        scrollY: "70vh",
+        scrollCollapse: true,
+        scrollX: true,
+        paging: true,
+        pageLength: 100,
+        lengthMenu: [50, 100, 250, 500, 1000],
+        searching: true,
+        ordering: true,
+        info: true,
+        columnDefs: [{
+            targets: ACTION_COL,
+            orderable: false,
+            searchable: false,
+            render: function (data, type) {
+                if (type === 'display') {
+                    return '<button type="button" class="btn btn-sm btn-outline-primary btn-edit-row">✏️ تعديل</button> ' +
+                           '<button type="button" class="btn btn-sm btn-outline-success btn-save-row" style="display:none;">💾 حفظ</button>';
+                }
+                return data;
+            }
+        }],
+        language: { url: "https://cdn.datatables.net/plug-ins/2.1.8/i18n/fr-FR.json" },
+        responsive: false
+    });
+
+    const table = window.stockTable;
+
+    // ----- 2. فلتر البحث + Autocomplete -----
+    function getUniqueEmplacements() {
+        const set = new Set();
+        table.column(1).data().each(function (v) {
+            if (v && String(v).trim() !== '') set.add(String(v).trim());
+        });
+        return Array.from(set).sort();
+    }
+
+    function initAutocomplete() {
+        const $input = $('#filterEmplacement');
+        if (!$input.length) return;
+        const list = getUniqueEmplacements();
+        if ($input.data('ui-autocomplete')) {
+            $input.autocomplete('option', 'source', list);
+        } else {
+            $input.autocomplete({
+                source: list,
+                minLength: 1,
+                delay: 100,
+                select: function () {
+                    setTimeout(function () { $('#btnRecherche').trigger('click'); }, 100);
+                }
+            });
+        }
+    }
+
+    $('#btnRecherche').on('click', function () {
+        const emplacement = ($('#filterEmplacement').val() || '').trim();
+        const codeProduit = ($('#filterCodeProduit').val() || '').trim();
+        const description = ($('#filterDescription').val() || '').trim();
+        const contenant   = ($('#filterNumeroContenant').val() || '').trim();
+        const statut      = ($('#filterStatut').val() || '').toLowerCase().trim();
+
+        table.columns().search('');
+        if (emplacement) table.column(1).search(emplacement, true, false);
+        if (codeProduit) table.column(2).search(codeProduit, true, false);
+        if (description) table.column(3).search(description, true, false);
+        if (contenant)   table.column(6).search('^' + contenant + '$', true, false);
+        if (statut)      table.column(STATUS_COL).search(statut, true, false);
+        table.draw();
+    });
+
+    $('#btnReset').on('click', function () {
+        $('#filterEmplacement, #filterCodeProduit, #filterDescription, #filterNumeroContenant, #filterStatut').val('');
+        table.columns().search('').draw();
+        table.search('').draw();
+    });
+
+    $('#filterNumeroContenant, #filterStatut').on('change keyup', function () {
+        $('#btnRecherche').trigger('click');
+    });
+
+    setTimeout(initAutocomplete, 500);
+    table.on('draw.dt', initAutocomplete);
+
+    // ----- 3. إضافة سطر جديد -----
+    $('#btnAddEmplacement').on('click', function () {
+        const newId = table.rows().count() + 1;
+        const nbColonnes = table.columns().count();
+        const newRowData = new Array(nbColonnes).fill("");
+        newRowData[ID_COL] = newId;
+        newRowData[STATUS_COL] = computeStatus(newRowData); // Vide
+
+        table.row.add(newRowData).draw(false);
+        table.page('last').draw('page');
+        const node = table.row(':last').node();
+        if (node) node.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+
+    // ----- 4. تفريغ الجدول -----
+    $('#btnViderTableau').on('click', function () {
+        if (!confirm("Voulez-vous vraiment effacer le contenu du tableau ? (ID et Emplacement seront conservés)")) return;
+
+        table.rows().every(function () {
+            let rowData = this.data();
+            for (let i = 2; i < rowData.length; i++) rowData[i] = "";
+            rowData[STATUS_COL] = computeStatus(rowData); // Vide
+            this.data(rowData);
+        });
+        table.draw(false);
+        alert("Le tableau a été effacé avec succès (ID et Emplacement conservés) !");
+    });
+
+    // ----- 5. تعديل السطر -----
+    $('#stockTable tbody').on('click', '.btn-edit-row', function () {
+        const $btn = $(this);
+        const $tr = $btn.closest('tr');
+        const row = table.row($tr);
+        const rowData = row.data();
+
+        $tr.find('td').each(function (i) {
+            if (i === ACTION_COL || i === ID_COL || i === STATUS_COL) return;
+            $(this).html(
+                '<input type="text" class="form-control form-control-sm cell-input" value="' +
+                escapeHtml(rowData[i]) + '">'
+            );
+        });
+
+        $tr.addClass('table-warning');
+        $btn.hide();
+        $tr.find('.btn-save-row').show();
+    });
+
+    // ----- 6. حفظ السطر + حساب Status -----
+    $('#stockTable tbody').on('click', '.btn-save-row', function () {
+        const $tr = $(this).closest('tr');
+        const row = table.row($tr);
+        const newRowData = row.data().slice();
+
+        $tr.find('td').each(function (i) {
+            if (i === ACTION_COL || i === ID_COL || i === STATUS_COL) return;
+            const $input = $(this).find('input.cell-input');
+            if ($input.length) newRowData[i] = $input.val();
+        });
+
+        newRowData[STATUS_COL] = computeStatus(newRowData);
+        row.data(newRowData).draw(false);
+
+        if (typeof InventaireDB !== 'undefined') {
+            InventaireDB.save(table.rows().data().toArray());
+        }
+    });
+});
+</script>
+
+<script>
+// ==================== IndexedDB ====================
+const InventaireDB = (function () {
+    const DB_NAME = 'InventaireDB';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'stock';
+    const DATA_KEY = 'comptage2'; // مفتاح خاص بهاد الصفحة (ماشي 'main' لي كيستعملها index)
+
+    function openDB() {
+        return new Promise(function (resolve, reject) {
+            const request = indexedDB.open(DB_NAME, DB_VERSION);
+            request.onerror = function () { reject(request.error); };
+            request.onsuccess = function () { resolve(request.result); };
+            request.onupgradeneeded = function (event) {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                }
+            };
+        });
+    }
+
+    async function save(data) {
+        try {
+            const db = await openDB();
+            return new Promise(function (resolve, reject) {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const record = {
+                    id: DATA_KEY,
+                    data: data,
+                    updatedAt: new Date().toISOString(),
+                    rowCount: Array.isArray(data) ? data.length : 0
+                };
+                const request = store.put(record);
+                request.onsuccess = function () { resolve(true); };
+                request.onerror = function () { reject(request.error); };
+                tx.oncomplete = function () { db.close(); };
+            });
+        } catch (e) {
+            console.error(e);
+            return false;
+        }
+    }
+
+    async function load() {
+        try {
+            const db = await openDB();
+            return new Promise(function (resolve, reject) {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.get(DATA_KEY);
+                request.onsuccess = function () {
+                    resolve(request.result && request.result.data ? request.result.data : null);
+                };
+                request.onerror = function () { reject(request.error); };
+                tx.oncomplete = function () { db.close(); };
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function clear() {
+        try {
+            const db = await openDB();
+            return new Promise(function (resolve, reject) {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const request = tx.objectStore(STORE_NAME).delete(DATA_KEY);
+                request.onsuccess = function () { resolve(true); };
+                request.onerror = function () { reject(request.error); };
+                tx.oncomplete = function () { db.close(); };
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+
+    async function migrateFromLocalStorage(oldKey) {
+        oldKey = oldKey || 'inventaire_stock_data_v1';
+        try {
+            const saved = localStorage.getItem(oldKey);
+            if (!saved) return null;
+            const data = JSON.parse(saved);
+            if (Array.isArray(data) && data.length > 0) {
+                await save(data);
+                localStorage.removeItem(oldKey);
+                return data;
+            }
+        } catch (e) {}
+        return null;
+    }
+
+    return { save: save, load: load, clear: clear, migrateFromLocalStorage: migrateFromLocalStorage };
+})();
+
+// تحميل البيانات عند البدء
+$(document).ready(async function () {
+    const table = $('#stockTable').DataTable();
+    let data = await InventaireDB.load();
+    if (!data) data = await InventaireDB.migrateFromLocalStorage();
+
+    if (data && data.length > 0) {
+        data = applyStatusToRows(data);
+        table.clear().rows.add(data).draw(false);
+    }
+
+    // زر الحفظ اليدوي
+    $('#btn-save-refresh').on('click', async function () {
+        const btn = $(this);
+        const original = btn.html();
+        btn.prop('disabled', true).html('⏳ Sauvegarde...');
+        const success = await InventaireDB.save(table.rows().data().toArray());
+        btn.prop('disabled', false).html(original);
+        alert(success ? '✅ Données sauvegardées avec succès !' : '❌ Erreur lors de la sauvegarde');
+    });
+
+    // حفظ تلقائي بعد 2.5 ثانية من أي تغيير
+    let saveTimeout = null;
+    table.on('draw.dt', function () {
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(function () {
+            InventaireDB.save(table.rows().data().toArray());
+        }, 2500);
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous"></script>
+<script>
+const btn = document.getElementById('darkModeBtn');
+const body = document.body;
+
+// Charger le thème sauvegardé
+if (localStorage.getItem('theme') === 'dark' || 
+    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+  body.setAttribute('data-theme', 'dark');
+  btn.textContent = '☀️';
+}
+
+// Au clic sur le bouton
+btn.addEventListener('click', () => {
+  if (body.getAttribute('data-theme') === 'dark') {
+    body.removeAttribute('data-theme');
+    btn.textContent = '🌙';
+    localStorage.setItem('theme', 'light');
+  } else {
+    body.setAttribute('data-theme', 'dark');
+    btn.textContent = '☀️';
+    localStorage.setItem('theme', 'dark');
+  }
+});
+</script>
+
+
+<!-- ==================== مزامنة مع "index" (واجهة العرض): جلب المنتجات الجديدة من القائمة الأساسية ==================== -->
+<script>
+$(document).ready(function () {
+    setTimeout(function () {
+        const DB_NAME = 'InventaireDB';
+        const STORE_NAME = 'stock';
+
+        function getRecord(key) {
+            return new Promise(function (resolve) {
+                const req = indexedDB.open(DB_NAME, 1);
+                req.onsuccess = function () {
+                    const db = req.result;
+                    const tx = db.transaction(STORE_NAME, 'readonly');
+                    const store = tx.objectStore(STORE_NAME);
+                    const r = store.get(key);
+                    r.onsuccess = function () {
+                        resolve(r.result && r.result.data ? r.result.data : []);
+                    };
+                    r.onerror = function () { resolve([]); };
+                    tx.oncomplete = function () { db.close(); };
+                };
+                req.onerror = function () { resolve([]); };
+            });
+        }
+
+        getRecord('main').then(function (masterRows) {
+            if (!masterRows || !masterRows.length) return;
+
+            const table = window.stockTable || $('#stockTable').DataTable();
+
+            // نحافظو على الصفوف والقيم لي كاينين ديجا محليا (COMPTAGE 2 خصوصا)
+            const existingById = {};
+            table.rows().every(function () {
+                const d = this.data();
+                if (d && d[ID_COL] !== undefined && d[ID_COL] !== '') existingById[d[ID_COL]] = d;
+            });
+
+            // نزيدو غير المنتجات الجداد لي ما كايناش ديجا فهاد الصفحة
+            const newRows = [];
+            masterRows.forEach(function (mRow) {
+                const id = mRow[ID_COL];
+                if (existingById[id] !== undefined) return; // كاين ديجا، ما نلمسوهش
+
+                const row = [
+                    id,          // ID
+                    mRow[1],     // Emplacement
+                    mRow[2],     // Code Produit
+                    mRow[3],     // Description
+                    mRow[4],     // Unité
+                    mRow[5],     // Date limite consom.
+                    mRow[6],     // N° de Contenant
+                    mRow[7],     // Lot
+                    '',          // COMPTAGE 2 (كيتعمر هنا محليا)
+                    '',          // ACTION
+                    'Vide'       // Status
+                ];
+                newRows.push(row);
+            });
+
+            if (newRows.length) {
+                table.rows.add(newRows).draw(false);
+                InventaireDB.save(table.rows().data().toArray());
+            }
+        });
+    }, 500);
+});
+</script>
+
+<!-- ==================== مزامنة حية مع سكانات Honeywell (Supabase) ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(function(){
+  const SUPABASE_URL = 'https://jdcexvsbzoibwrcbqtol.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_lXyy-dcIotpaNBPjvIroQA_ash_Cm9c';
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const ROUND = 'comptage2'; // هاد الصفحة خاصة بـ COMPTAGE 2
+
+  function applyScansToTable(scans){
+    const table = window.stockTable || $('#stockTable').DataTable();
+
+    // مجموع الكمية (quantite) لكل Emplacement + آخر تفاصيل جات من سكانات Honeywell
+    const totals = {};
+    const details = {};
+    (scans || []).forEach(function(s){
+      const emp = (s.emplacement || '').trim();
+      if(!emp) return;
+      const q = parseFloat(String(s.quantite).replace(',', '.')) || 0;
+      totals[emp] = (totals[emp] || 0) + q;
+      details[emp] = s; // آخر سكان بحال هاد Emplacement (كيحمل Code, Description...)
+    });
+
+    // نجمعو الأماكن الموجودة ديجا فالجدول
+    const existingEmps = {};
+    let nextId = 1;
+    table.rows().every(function(){
+      const d = this.data();
+      const emp = (d[1] || '').trim();
+      if(emp) existingEmps[emp] = true;
+      const idNum = parseInt(d[0], 10);
+      if(!isNaN(idNum) && idNum >= nextId) nextId = idNum + 1;
+    });
+
+    let changed = false;
+
+    // 1) تحديث الصفوف الموجودة ديجا
+    table.rows().every(function(){
+      const d = this.data();
+      const emp = (d[1] || '').trim();
+      if(totals[emp] !== undefined){
+        const newVal = String(totals[emp]);
+        if(String(d[8] || '') !== newVal){
+          d[8] = newVal; // عمود COMPTAGE 2
+          this.data(d);
+          changed = true;
+        }
+      }
+    });
+
+    // 2) زيادة صفوف جديدة للأماكن اللي وصلها سكان ولكن ماكانتش موجودة فالجدول
+    const newRows = [];
+    Object.keys(totals).forEach(function(emp){
+      if(existingEmps[emp]) return;
+      const s = details[emp] || {};
+      newRows.push([
+        nextId++,                 // ID
+        emp,                      // Emplacement
+        s.code_produit || '',     // Code Produit
+        s.description || '',      // Description
+        s.unite || '',            // Unité
+        s.dlc || '',              // Date limite consom.
+        s.contenant || '',        // N° de Contenant
+        s.lot || '',              // Lot
+        String(totals[emp]),      // COMPTAGE 2
+        '',                       // ACTION
+        'Vide'                    // Status
+      ]);
+    });
+    if(newRows.length){
+      table.rows.add(newRows);
+      changed = true;
+    }
+
+    if(changed){
+      table.draw(false); // الحفظ المحلي التلقائي (IndexedDB) كيتكفل بالباقي
+    }
+  }
+
+  async function loadAndApply(){
+    try{
+      const { data, error } = await sb.from('scans').select('emplacement,quantite').eq('round', ROUND);
+      if(error){ console.error('Supabase select error:', error); return; }
+      applyScansToTable(data);
+    }catch(e){ console.error(e); }
+  }
+
+  $(document).ready(function(){
+    setTimeout(loadAndApply, 800); // بعد ما الجدول يتهيأ من IndexedDB
+
+    // تحديث حي: أي سكان جديد من Honeywell كيبان مباشرة بلا رفريش
+    try{
+      sb.channel('scans-' + ROUND)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'scans', filter: 'round=eq.' + ROUND }, function(){
+          loadAndApply();
+        })
+        .subscribe();
+    }catch(e){ console.error('Supabase realtime error:', e); }
+
+    // نسخة احتياطية: تحديث دوري كل 10 ثواني (حتى إلا الاتصال الحي تقطع)
+    setInterval(loadAndApply, 10000);
+  });
+})();
+</script>
+
+<!-- مكتبات التصدير (Excel & PDF) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    // أسماء الأعمدة تُقرأ تلقائيًا من رأس الجدول
+    function getHeaders() {
+        return $('#stockTable thead th').map(function () {
+            return $(this).text().trim();
+        }).get();
+    }
+
+    // نصدّر البيانات الظاهرة حاليًا (بعد تطبيق أي فلترة/بحث)
+    // إن أردت تصدير كل البيانات دومًا بغض النظر عن الفلتر، استبدل 'applied' بـ ''
+    function getExportData() {
+        const table = window.stockTable || $('#stockTable').DataTable();
+        return table.rows({ search: 'applied' }).data().toArray();
+    }
+
+    // ---------- تصدير Excel ----------
+    $('#btn-export-excel').on('click', function () {
+        const headers = getHeaders();
+        const rows = getExportData();
+
+        if (!rows.length) {
+            alert('لا توجد بيانات لتصديرها.');
+            return;
+        }
+
+        const wsData = [headers, ...rows];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Inventaire');
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `inventaire_${dateStr}.xlsx`);
+    });
+
+    // ---------- تصدير PDF ----------
+    $('#btn-export-pdf').on('click', function () {
+        const headers = getHeaders();
+        const rows = getExportData();
+
+        if (!rows.length) {
+            alert('لا توجد بيانات لتصديرها.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        // اتجاه أفقي (landscape) لأن الجدول به 11 عمودًا
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+        doc.setFontSize(12);
+        doc.text('Inventaire - Feuille COMPTAGE 2', 40, 30);
+
+        doc.autoTable({
+            head: [headers],
+            body: rows,
+            startY: 45,
+            styles: { fontSize: 7, cellPadding: 3 },
+            headStyles: { fillColor: [40, 40, 40] },
+            margin: { left: 20, right: 20 }
+        });
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        doc.save(`inventaire_${dateStr}.pdf`);
+    });
+});
+</script>
+<!-- دالة عامة: تحديد Status تلقائيًا (Stock/Vide) حسب امتلاء الحقول -->
+
+
+
+  </body>
+
+</html>
+

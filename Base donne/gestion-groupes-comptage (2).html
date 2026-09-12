@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion des Groupes de Comptage</title>
+
+<style>
+  :root{
+    --bg:#EEF0F3;
+    --panel:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5B6472;
+    --steel:#233142;
+    --steel-2:#2E4057;
+    --accent:#E2790F;
+    --accent-dark:#B85F07;
+    --accent-soft:#FCE6CC;
+    --line:#DCE1E7;
+    --line-strong:#B9C1CB;
+    --success:#1F7A4D;
+    --success-soft:#E1F3E8;
+    --danger:#C0392B;
+    --danger-soft:#FBE4E1;
+    --blue:#2C5F8A;
+    --blue-soft:#DDE9F4;
+    --violet:#6A4C93;
+    --violet-soft:#EAE3F3;
+    --mono: "SF Mono","Consolas","Roboto Mono","Courier New",monospace;
+    --sans: -apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);}
+  ::selection{background:var(--accent-soft);}
+
+  /* ---------- TOP BAR ---------- */
+  .topbar{
+    background:linear-gradient(180deg,var(--steel) 0%, var(--steel-2) 100%);
+    color:#fff;
+    padding:18px 28px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+    position:sticky;top:0;z-index:50;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:8px;
+    background:var(--accent);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono);font-weight:700;font-size:15px;color:#1B2430;
+    letter-spacing:-1px;
+  }
+  .brand h1{font-size:16px;margin:0;font-weight:700;letter-spacing:.3px;}
+  .brand small{display:block;color:#A9B4C2;font-size:11.5px;font-weight:500;letter-spacing:.4px;margin-top:2px;}
+  .topbar-right{display:flex;align-items:center;gap:14px;}
+  .save-indicator{
+    font-size:12px;color:#A9B4C2;display:flex;align-items:center;gap:6px;
+    font-family:var(--mono);
+    opacity:0;transition:opacity .3s;
+  }
+  .save-indicator.show{opacity:1;}
+  .save-indicator .dot{width:7px;height:7px;border-radius:50%;background:#3FBE7A;}
+  .icon-btn{
+    border:1.5px solid rgba(255,255,255,.22);background:rgba(255,255,255,.06);color:#fff;
+    width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;transition:.15s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.14);}
+  .icon-btn svg{width:17px;height:17px;}
+  .terminal-status{
+    display:flex;align-items:center;gap:6px;font-size:11.5px;color:#A9B4C2;font-family:var(--mono);
+  }
+  .terminal-status .dot{width:7px;height:7px;border-radius:50%;background:#8B95A3;}
+  .terminal-status.connected .dot{background:#3FBE7A;}
+
+  /* ---------- TABS ---------- */
+  .tabs{
+    display:flex;gap:4px;padding:0 24px;background:var(--panel);
+    border-bottom:2px solid var(--line);position:sticky;top:66px;z-index:40;
+    overflow-x:auto;
+  }
+  .tab-btn{
+    border:none;background:none;padding:14px 18px;font-size:13.5px;font-weight:700;
+    color:var(--ink-soft);cursor:pointer;border-bottom:3px solid transparent;
+    letter-spacing:.3px;font-family:var(--sans);white-space:nowrap;
+    display:flex;align-items:center;gap:6px;
+  }
+  .tab-btn .swatch{width:9px;height:9px;border-radius:3px;}
+  .tab-btn.active{color:var(--steel);}
+  .tab-btn[data-tab="inv"].active{border-bottom-color:var(--accent);}
+  .tab-btn[data-tab="c1"].active{border-bottom-color:var(--blue);}
+  .tab-btn[data-tab="c2"].active{border-bottom-color:var(--violet);}
+  .tab-btn .badge{
+    display:inline-block;margin-inline-start:2px;background:var(--line);color:var(--ink-soft);
+    font-size:10.5px;padding:1px 7px;border-radius:20px;font-family:var(--mono);
+  }
+  .tab-btn.active .badge{background:var(--accent-soft);color:var(--accent-dark);}
+
+  main{max-width:1240px;margin:0 auto;padding:28px 24px 80px;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .section-head{
+    display:flex;align-items:flex-end;justify-content:space-between;
+    margin-bottom:16px;gap:12px;flex-wrap:wrap;
+  }
+  .section-head h2{font-size:20px;margin:0 0 4px;color:var(--steel);display:flex;align-items:center;gap:9px;}
+  .section-head p{margin:0;color:var(--ink-soft);font-size:13px;}
+  .round-tag{
+    font-family:var(--mono);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;
+    letter-spacing:.3px;
+  }
+  .round-tag.c1{background:var(--blue-soft);color:var(--blue);}
+  .round-tag.c2{background:var(--violet-soft);color:var(--violet);}
+
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  input[type=text], input[type=email], input[type=number], input[type=url], textarea, select{
+    border:1.5px solid var(--line-strong);border-radius:var(--radius);
+    padding:8px 10px;font-size:13.5px;font-family:var(--sans);background:#fff;color:var(--ink);
+  }
+  input:focus, textarea:focus, select:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+  .search-box{position:relative;}
+  .search-box input{padding-inline-start:30px;width:220px;}
+  .search-box svg{position:absolute;inset-inline-start:9px;top:50%;transform:translateY(-50%);opacity:.45;}
+
+  button{font-family:var(--sans);cursor:pointer;}
+  .btn{
+    border:1.5px solid var(--line-strong);background:#fff;color:var(--ink);
+    padding:8px 14px;border-radius:var(--radius);font-size:13px;font-weight:600;
+    display:inline-flex;align-items:center;gap:6px;transition:.15s;
+  }
+  .btn:hover{border-color:var(--steel-2);background:#F7F9FB;}
+  .btn-primary{background:var(--steel);border-color:var(--steel);color:#fff;}
+  .btn-primary:hover{background:var(--steel-2);}
+  .btn-accent{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .btn-accent:hover{background:var(--accent-dark);}
+  .btn-c1{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .btn-c1:hover{background:#234b6e;}
+  .btn-c2{background:var(--violet);border-color:var(--violet);color:#fff;}
+  .btn-c2:hover{background:#553b78;}
+  .btn-danger{color:var(--danger);border-color:var(--danger-soft);background:var(--danger-soft);}
+  .btn-danger:hover{background:#F6C9C2;}
+  .btn-ghost{border-color:transparent;background:transparent;padding:6px 8px;}
+  .btn-ghost:hover{background:var(--line);}
+  .btn:disabled{opacity:.55;cursor:not-allowed;}
+  .btn svg{width:14px;height:14px;flex:none;}
+  .btn-sm{padding:6px 10px;font-size:12px;}
+
+  .btn-launch{position:relative;min-width:108px;justify-content:center;}
+  .btn-launch .ic{display:flex;align-items:center;justify-content:center;}
+  .btn-launch.state-sending .ic svg{animation:spin .8s linear infinite;}
+  .btn-launch.state-success{background:var(--success)!important;border-color:var(--success)!important;}
+  .btn-launch.state-error{background:var(--danger)!important;border-color:var(--danger)!important;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  @keyframes pulseRing{
+    0%{box-shadow:0 0 0 0 rgba(226,121,15,.5);}
+    100%{box-shadow:0 0 0 10px rgba(226,121,15,0);}
+  }
+  .btn-launch.state-sending{animation:pulseRing 1s ease-out infinite;}
+
+  /* ---------- TABLE ---------- */
+  .table-wrap{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    overflow:auto;box-shadow:0 1px 3px rgba(20,30,45,.05);max-height:68vh;
+  }
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  thead th{
+    text-align:start;background:#F5F7F9;color:var(--ink-soft);
+    font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;
+    padding:11px 14px;border-bottom:1.5px solid var(--line);white-space:nowrap;
+    position:sticky;top:0;z-index:5;
+  }
+  tbody td{padding:8px 14px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFBFC;}
+  td .cell-input{
+    width:100%;border:1.5px solid transparent;background:transparent;
+    padding:6px 7px;border-radius:5px;font-size:13.5px;font-family:var(--mono);color:var(--ink);
+  }
+  td .cell-input:hover{border-color:var(--line-strong);background:#fff;}
+  td .cell-input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  td select.cell-input{font-family:var(--sans);cursor:pointer;}
+  .row-actions{display:flex;gap:4px;justify-content:flex-end;}
+  .mono{font-family:var(--mono);}
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:12px;font-weight:700;
+    background:var(--steel);color:#fff;padding:3px 9px;border-radius:20px;
+  }
+  .count-pill{
+    background:var(--accent-soft);color:var(--accent-dark);font-family:var(--mono);font-weight:700;
+    padding:3px 9px;border-radius:20px;font-size:12px;white-space:nowrap;
+  }
+  .empty-row td{text-align:center;color:var(--ink-soft);padding:40px 14px;font-size:13.5px;}
+  .empty-row .hint{font-size:12px;color:#8B95A3;margin-top:4px;}
+
+  /* ---------- MODAL ---------- */
+  .modal-backdrop{
+    position:fixed;inset:0;background:rgba(20,25,35,.55);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:20px;
+  }
+  .modal-backdrop.show{display:flex;}
+  .modal{
+    background:#fff;border-radius:12px;width:100%;max-width:640px;max-height:86vh;
+    display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);
+  }
+  .modal-head{
+    padding:20px 24px 14px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:flex-start;
+  }
+  .modal-head h3{margin:0 0 4px;font-size:17px;color:var(--steel);}
+  .modal-head p{margin:0;color:var(--ink-soft);font-size:12.5px;font-family:var(--mono);}
+  .modal-close{border:none;background:none;font-size:20px;color:var(--ink-soft);cursor:pointer;line-height:1;padding:4px;}
+  .send-status{
+    margin:0 24px;padding:11px 14px;border-radius:8px;font-size:12.5px;display:flex;align-items:center;gap:9px;
+  }
+  .send-status.ok{background:var(--success-soft);color:#155C36;}
+  .send-status.err{background:var(--danger-soft);color:#7A2318;}
+  .send-status.warn{background:var(--accent-soft);color:var(--accent-dark);}
+  .send-status svg{width:16px;height:16px;flex:none;}
+  .modal-body{padding:16px 24px;overflow-y:auto;flex:1;}
+  .colis-list{list-style:none;margin:0;padding:0;columns:2;column-gap:20px;}
+  .colis-list li{
+    font-family:var(--mono);font-size:13px;padding:6px 0;border-bottom:1px dashed var(--line);
+    break-inside:avoid;display:flex;gap:8px;
+  }
+  .colis-list li .n{color:#9AA5B1;min-width:28px;text-align:right;}
+  .modal-foot{
+    padding:14px 24px 20px;border-top:1px solid var(--line);
+    display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-start;align-items:center;
+  }
+  @media (max-width:520px){ .colis-list{columns:1;} }
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:#fff;padding:11px 20px;border-radius:8px;font-size:13px;
+    box-shadow:0 8px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.25s;z-index:200;
+    display:flex;align-items:center;gap:8px;max-width:90vw;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .dot{width:7px;height:7px;border-radius:50%;background:#3FBE7A;flex:none;}
+  .toast.err .dot{background:#E5675A;}
+
+  form.inline-form{display:none;background:#F5F7F9;border:1.5px dashed var(--line-strong);border-radius:10px;padding:16px;margin-bottom:16px;}
+  form.inline-form.show{display:block;}
+  .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px;}
+  .form-field label{display:block;font-size:11px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px;}
+  .form-field input, .form-field textarea{width:100%;}
+  .form-field textarea{min-height:90px;resize:vertical;font-family:var(--mono);}
+  .form-field small{display:block;color:#8B95A3;font-size:11px;margin-top:4px;}
+  .form-field.wide{grid-column:1/-1;}
+  .form-actions{display:flex;gap:8px;}
+
+  .stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .stat-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 16px;
+    min-width:130px;
+  }
+  .stat-card .num{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--steel);}
+  .stat-card .lbl{font-size:11px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.4px;margin-top:2px;}
+
+  .note-box{
+    background:#F5F7F9;border:1px solid var(--line);border-radius:8px;padding:10px 14px;
+    font-size:12.5px;color:var(--ink-soft);margin-bottom:16px;
+  }
+  .note-box b{color:var(--ink);}
+
+  /* settings modal */
+  .settings-form .form-field{margin-bottom:14px;}
+  .settings-form select{width:100%;}
+  .settings-hint{font-size:11.5px;color:#8B95A3;line-height:1.5;}
+
+  @media print{
+    body *{visibility:hidden;}
+    .modal, .modal *{visibility:visible;}
+    .modal{position:absolute;inset:0;max-width:none;max-height:none;box-shadow:none;border-radius:0;}
+    .modal-foot, .modal-close, .send-status{display:none;}
+  }
+  @media (max-width:640px){
+    .topbar{padding:14px 16px;}
+    main{padding:18px 12px 60px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="mark">GC</div>
+    <div>
+      <h1>Gestion des Groupes de Comptage</h1>
+      <small>Inventaire &amp; lancement des colis</small>
+       MY<span class="hi1">&</span>INVENTER</a>
+       <a href="index.html" >feuille principale</a>
+      <a href="./feuille/feuille contage1.html">feuille COMPTAGE 1</a>
+      <a href="./feuille/feuille contage2.html">feuille COMPTAGE 2</a>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="terminal-status" id="terminalStatus"><span class="dot"></span><span>Terminal non configuré</span></div>
+    <button class="icon-btn" id="btnSettings" title="Paramètres du terminal">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09A1.65 1.65 0 0015 4.6a1.65 1.65 0 001.82.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
+    <div class="save-indicator" id="saveIndicator"><span class="dot"></span><span>Enregistré localement</span></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="inv">Inventaires <span class="badge" id="invCount">0</span></button>
+  <button class="tab-btn" data-tab="c1"><span class="swatch" style="background:var(--blue);"></span>Comptage C1 <span class="badge" id="c1Count">0</span></button>
+  <button class="tab-btn" data-tab="c2"><span class="swatch" style="background:var(--violet);"></span>Comptage C2 <span class="badge" id="c2Count">0</span></button>
+</div>
+
+<main>
+
+  <!-- ================= PANEL : INVENTAIRES ================= -->
+  <section class="panel active" id="panel-inv">
+    <div class="section-head">
+      <div>
+        <h2>Inventaires</h2>
+        <p>Liste des groupes de comptage (ex : GROUPE 1, GROUPE 2...) avec leur responsable — cette liste alimente automatiquement le menu déroulant des onglets Comptage C1 / C2.</p>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="invSearch" placeholder="Rechercher...">
+        </div>
+        <button class="btn btn-primary" id="btnAddInv">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter un groupe
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:60px;">N°</th>
+            <th>N° de groupe de comptage</th>
+            <th>Nom de tête de groupe</th>
+            <th>Email de comptage</th>
+            <th style="width:110px;text-align:end;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="invTbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= PANEL : COMPTAGE C1 ================= -->
+  <section class="panel" id="panel-c1">
+    <div class="section-head">
+      <div>
+        <h2>Groupes de comptage <span class="round-tag c1">C 1</span></h2>
+        <p>Premier passage de comptage — indépendant du deuxième passage.</p>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" class="grpSearch" data-round="c1" placeholder="Rechercher rayon, ALLE...">
+        </div>
+        <button class="btn btn-primary btnAddGrp" data-round="c1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter un groupe
+        </button>
+        <button class="btn btnResetDefaults" data-round="c1" title="Recharger les données d'origine du fichier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="num statGroups" data-round="c1">0</div><div class="lbl">Groupes</div></div>
+      <div class="stat-card"><div class="num statEmpl" data-round="c1">0</div><div class="lbl">Emplacements</div></div>
+      <div class="stat-card"><div class="num statRayons" data-round="c1">0</div><div class="lbl">Rayons</div></div>
+    </div>
+
+    <form class="inline-form grpForm" data-round="c1">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Rayon</label>
+          <input type="text" class="f_rayon" placeholder="A">
+        </div>
+        <div class="form-field">
+          <label>N° ALLE</label>
+          <input type="text" class="f_alle" placeholder="ALLE A0">
+        </div>
+        <div class="form-field wide">
+          <label>Emplacements</label>
+          <textarea class="f_emplacements" placeholder="A1-01-1A, A1-01-1B, A1-01-1C, ..."></textarea>
+          <small>Séparez les codes par une virgule, un espace ou un retour à la ligne. Laissez vide si le rayon n'a qu'un seul emplacement (ex : SOL, MUR). Ce groupe sera partagé entre C1 et C2.</small>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btnSaveGrp">Enregistrer</button>
+        <button type="button" class="btn btnCancelGrp">Annuler</button>
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rayon</th>
+            <th>N° ALLE</th>
+            <th>Emplacements</th>
+            <th style="width:190px;">Groupe de comptage</th>
+            <th style="width:160px;text-align:end;">Action</th>
+          </tr>
+        </thead>
+        <tbody class="grpTbody" data-round="c1"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= PANEL : COMPTAGE C2 ================= -->
+  <section class="panel" id="panel-c2">
+    <div class="section-head">
+      <div>
+        <h2>Groupes de comptage <span class="round-tag c2">C 2</span></h2>
+        <p>Deuxième passage de comptage (contre-vérification) — indépendant du premier passage.</p>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" class="grpSearch" data-round="c2" placeholder="Rechercher rayon, ALLE...">
+        </div>
+        <button class="btn btn-primary btnAddGrp" data-round="c2">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          Ajouter un groupe
+        </button>
+        <button class="btn btnResetDefaults" data-round="c2" title="Recharger les données d'origine du fichier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 109-9 9.75 9.75 0 00-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="num statGroups" data-round="c2">0</div><div class="lbl">Groupes</div></div>
+      <div class="stat-card"><div class="num statEmpl" data-round="c2">0</div><div class="lbl">Emplacements</div></div>
+      <div class="stat-card"><div class="num statRayons" data-round="c2">0</div><div class="lbl">Rayons</div></div>
+    </div>
+
+    <form class="inline-form grpForm" data-round="c2">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Rayon</label>
+          <input type="text" class="f_rayon" placeholder="A">
+        </div>
+        <div class="form-field">
+          <label>N° ALLE</label>
+          <input type="text" class="f_alle" placeholder="ALLE A0">
+        </div>
+        <div class="form-field wide">
+          <label>Emplacements</label>
+          <textarea class="f_emplacements" placeholder="A1-01-1A, A1-01-1B, A1-01-1C, ..."></textarea>
+          <small>Séparez les codes par une virgule, un espace ou un retour à la ligne. Laissez vide si le rayon n'a qu'un seul emplacement (ex : SOL, MUR). Ce groupe sera partagé entre C1 et C2.</small>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btnSaveGrp">Enregistrer</button>
+        <button type="button" class="btn btnCancelGrp">Annuler</button>
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rayon</th>
+            <th>N° ALLE</th>
+            <th>Emplacements</th>
+            <th style="width:190px;">Groupe de comptage</th>
+            <th style="width:160px;text-align:end;">Action</th>
+          </tr>
+        </thead>
+        <tbody class="grpTbody" data-round="c2"></tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<!-- ================= MODAL LANCE (résultat) ================= -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <h3 id="modalTitle">Colis générés</h3>
+        <p id="modalSubtitle">A · ALLE A0</p>
+      </div>
+      <button class="modal-close" id="modalClose">&times;</button>
+    </div>
+    <div class="send-status" id="sendStatus" style="display:none;"></div>
+    <div class="modal-body">
+      <ol class="colis-list" id="colisList"></ol>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" id="btnCopy">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copier
+      </button>
+      <button class="btn" id="btnDownload">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Exporter (.txt)
+      </button>
+      <button class="btn" id="btnPrint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimer
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODAL SETTINGS (terminal) ================= -->
+<div class="modal-backdrop" id="settingsBackdrop">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-head">
+      <div>
+        <h3>Paramètres du terminal</h3>
+        <p>Connexion Wifi / réseau local</p>
+      </div>
+      <button class="modal-close" id="settingsClose">&times;</button>
+    </div>
+    <div class="modal-body settings-form">
+      <div class="form-field">
+        <label>Adresse du terminal (URL)</label>
+        <input type="url" id="s_url" placeholder="http://192.168.1.50:8080/scan">
+      </div>
+      <div class="form-field">
+        <label>Méthode d'envoi</label>
+        <select id="s_method">
+          <option value="POST_JSON">POST — JSON dans le body</option>
+          <option value="GET_QUERY">GET — paramètres dans l'URL</option>
+        </select>
+      </div>
+      <p class="settings-hint">
+        Le bouton LANCER tentera d'envoyer le groupe (rayon, N° ALLE, emplacements) à cette adresse.
+        Cela ne fonctionne que si le terminal est accessible depuis cet appareil (même réseau Wifi) et que son
+        application accepte les requêtes HTTP entrantes. Si l'app installée sur le terminal n'expose pas
+        d'adresse HTTP, laissez ce champ vide : le bouton LANCER affichera quand même la liste des colis,
+        exportable en .txt ou imprimable pour transfert manuel.
+      </p>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-primary" id="btnSaveSettings">Enregistrer</button>
+      <button class="btn" id="btnClearSettings">Effacer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg">Enregistré</span></div>
+
+<script>
+window.DEFAULT_GROUPS = [{"rayon": "A", "alle": "ALLE A0", "emplacements": ["A1-01-1A", "A1-01-1B", "A1-01-1C", "A1-02-1A", "A1-02-1B", "A1-02-1C", "A1-03-1A", "A1-03-1B", "A1-03-1C", "A1-04-1A", "A1-04-1B", "A1-04-1C", "A1-05-1A", "A1-05-1B", "A1-05-1C", "A2-01-1A", "A2-01-1B", "A2-01-1C", "A2-02-1A", "A2-02-1B", "A2-02-1C", "A2-03-1A", "A2-03-1B", "A2-03-1C", "A2-04-1A", "A2-04-1B", "A2-04-1C", "A2-05-1A", "A2-05-1B", "A2-05-1C"], "id": "g_A_ALLE_A0"}, {"rayon": "A", "alle": "ALLE A123", "emplacements": ["A1-01-2A", "A1-01-2B", "A1-01-2C", "A1-01-3A", "A1-01-3B", "A1-01-3C", "A1-01-4A", "A1-01-4B", "A1-01-4C", "A1-01-5A", "A1-01-5B", "A1-01-5C", "A1-02-2A", "A1-02-2B", "A1-02-2C", "A1-02-3A", "A1-02-3B", "A1-02-3C", "A1-02-4A", "A1-02-4B", "A1-02-4C", "A1-02-5A", "A1-02-5B", "A1-02-5C", "A1-03-2A", "A1-03-2B", "A1-03-2C", "A1-03-3A", "A1-03-3B", "A1-03-3C", "A1-03-4A", "A1-03-4B", "A1-03-4C", "A1-03-5A", "A1-03-5B", "A1-03-5C", "A1-04-2A", "A1-04-2B", "A1-04-2C", "A1-04-3A", "A1-04-3B", "A1-04-3C", "A1-04-4A", "A1-04-4B", "A1-04-4C", "A1-04-5A", "A1-04-5B", "A1-04-5C", "A1-05-2A", "A1-05-2B", "A1-05-2C", "A1-05-3A", "A1-05-3B", "A1-05-3C", "A1-05-4A", "A1-05-4B", "A1-05-4C", "A1-05-5A", "A1-05-5B", "A1-05-5C", "A2-01-2A", "A2-01-2B", "A2-01-2C", "A2-01-3A", "A2-01-3B", "A2-01-3C", "A2-01-4A", "A2-01-4B", "A2-01-4C", "A2-01-5A", "A2-01-5B", "A2-01-5C", "A2-02-2A", "A2-02-2B", "A2-02-2C", "A2-02-3A", "A2-02-3B", "A2-02-3C", "A2-02-4A", "A2-02-4B", "A2-02-4C", "A2-02-5A", "A2-02-5B", "A2-02-5C", "A2-03-2A", "A2-03-2B", "A2-03-2C", "A2-03-3A", "A2-03-3B", "A2-03-3C", "A2-03-4A", "A2-03-4B", "A2-03-4C", "A2-03-5A", "A2-03-5B", "A2-03-5C", "A2-04-2A", "A2-04-2B", "A2-04-2C", "A2-04-3A", "A2-04-3B", "A2-04-3C", "A2-04-4A", "A2-04-4B", "A2-04-4C", "A2-04-5A", "A2-04-5B", "A2-04-5C", "A2-05-2A", "A2-05-2B", "A2-05-2C", "A2-05-3A", "A2-05-3B", "A2-05-3C", "A2-05-4A", "A2-05-4B", "A2-05-4C", "A2-05-5A", "A2-05-5B", "A2-05-5C"], "id": "g_A_ALLE_A123"}, {"rayon": "B", "alle": "ALLE B0", "emplacements": ["B1-01-1A", "B1-01-1B", "B1-01-1C", "B1-02-1A", "B1-02-1B", "B1-02-1C", "B1-03-1A", "B1-03-1B", "B1-03-1C", "B1-04-1A", "B1-04-1B", "B1-04-1C", "B1-05-1A", "B1-05-1B", "B1-05-1C", "B1-06-1A", "B1-06-1B", "B1-06-1C", "B1-07-1A", "B1-07-1B", "B1-07-1C", "B1-08-1A", "B1-08-1B", "B1-08-1C", "B2-01-1A", "B2-01-1B", "B2-01-1C", "B2-02-1A", "B2-02-1B", "B2-02-1C", "B2-03-1A", "B2-03-1B", "B2-03-1C", "B2-04-1A", "B2-04-1B", "B2-04-1C", "B2-05-1A", "B2-05-1B", "B2-05-1C", "B2-06-1A", "B2-06-1B", "B2-06-1C", "B2-07-1A", "B2-07-1B", "B2-07-1C", "B2-08-1A", "B2-08-1B", "B2-08-1C", "B2-09-1A", "B2-09-1B", "B2-09-1C", "B2-10-1A", "B2-10-1B", "B2-10-1C"], "id": "g_B_ALLE_B0"}, {"rayon": "B", "alle": "ALLE B123", "emplacements": ["B1-01-2A", "B1-01-2B", "B1-01-2C", "B1-01-3A", "B1-01-3B", "B1-01-3C", "B1-01-4A", "B1-01-4B", "B1-01-4C", "B1-01-5A", "B1-01-5B", "B1-01-5C", "B1-02-2A", "B1-02-2B", "B1-02-2C", "B1-02-3A", "B1-02-3B", "B1-02-3C", "B1-02-4A", "B1-02-4B", "B1-02-4C", "B1-02-5A", "B1-02-5B", "B1-02-5C", "B1-03-2A", "B1-03-2B", "B1-03-2C", "B1-03-3A", "B1-03-3B", "B1-03-3C", "B1-03-4A", "B1-03-4B", "B1-03-4C", "B1-03-5A", "B1-03-5B", "B1-03-5C", "B1-04-2A", "B1-04-2B", "B1-04-2C", "B1-04-3A", "B1-04-3B", "B1-04-3C", "B1-04-4A", "B1-04-4B", "B1-04-4C", "B1-04-5A", "B1-04-5B", "B1-04-5C", "B1-05-2A", "B1-05-2B", "B1-05-2C", "B1-05-3A", "B1-05-3B", "B1-05-3C", "B1-05-4A", "B1-05-4B", "B1-05-4C", "B1-05-5A", "B1-05-5B", "B1-05-5C", "B1-06-2A", "B1-06-2B", "B1-06-2C", "B1-06-3A", "B1-06-3B", "B1-06-3C", "B1-06-4A", "B1-06-4B", "B1-06-4C", "B1-06-5A", "B1-06-5B", "B1-06-5C", "B1-07-2A", "B1-07-2B", "B1-07-2C", "B1-07-3A", "B1-07-3B", "B1-07-3C", "B1-07-4A", "B1-07-4B", "B1-07-4C", "B1-07-5A", "B1-07-5B", "B1-07-5C", "B1-08-2A", "B1-08-2B", "B1-08-2C", "B1-08-3A", "B1-08-3B", "B1-08-3C", "B1-08-4A", "B1-08-4B", "B1-08-4C", "B1-08-5A", "B1-08-5B", "B1-08-5C", "B2-01-2A", "B2-01-2B", "B2-01-2C", "B2-01-3A", "B2-01-3B", "B2-01-3C", "B2-01-4A", "B2-01-4B", "B2-01-4C", "B2-01-5A", "B2-01-5B", "B2-01-5C", "B2-02-2A", "B2-02-2B", "B2-02-2C", "B2-02-3A", "B2-02-3B", "B2-02-3C", "B2-02-4A", "B2-02-4B", "B2-02-4C", "B2-02-5A", "B2-02-5B", "B2-02-5C", "B2-03-2A", "B2-03-2B", "B2-03-2C", "B2-03-3A", "B2-03-3B", "B2-03-3C", "B2-03-4A", "B2-03-4B", "B2-03-4C", "B2-03-5A", "B2-03-5B", "B2-03-5C", "B2-04-2A", "B2-04-2B", "B2-04-2C", "B2-04-3A", "B2-04-3B", "B2-04-3C", "B2-04-4A", "B2-04-4B", "B2-04-4C", "B2-04-5A", "B2-04-5B", "B2-04-5C", "B2-05-2A", "B2-05-2B", "B2-05-2C", "B2-05-3A", "B2-05-3B", "B2-05-3C", "B2-05-4A", "B2-05-4B", "B2-05-4C", "B2-05-5A", "B2-05-5B", "B2-05-5C", "B2-06-2A", "B2-06-2B", "B2-06-2C", "B2-06-3A", "B2-06-3B", "B2-06-3C", "B2-06-4A", "B2-06-4B", "B2-06-4C", "B2-06-5A", "B2-06-5B", "B2-06-5C", "B2-07-2A", "B2-07-2B", "B2-07-2C", "B2-07-3A", "B2-07-3B", "B2-07-3C", "B2-07-4A", "B2-07-4B", "B2-07-4C", "B2-07-5A", "B2-07-5B", "B2-07-5C", "B2-08-2A", "B2-08-2B", "B2-08-2C", "B2-08-3A", "B2-08-3B", "B2-08-3C", "B2-08-4A", "B2-08-4B", "B2-08-4C", "B2-08-5A", "B2-08-5B", "B2-08-5C", "B2-09-2A", "B2-09-2B", "B2-09-2C", "B2-09-3A", "B2-09-3B", "B2-09-3C", "B2-09-4A", "B2-09-4B", "B2-09-4C", "B2-09-5A", "B2-09-5B", "B2-09-5C", "B2-10-2A", "B2-10-2B", "B2-10-2C", "B2-10-3A", "B2-10-3B", "B2-10-3C", "B2-10-4A", "B2-10-4B", "B2-10-4C", "B2-10-5A", "B2-10-5B", "B2-10-5C"], "id": "g_B_ALLE_B123"}, {"rayon": "C", "alle": "ALLE C0", "emplacements": ["C1-01-1A", "C1-01-1B", "C1-01-1C", "C1-02-1A", "C1-02-1B", "C1-02-1C", "C1-03-1A", "C1-03-1B", "C1-03-1C", "C1-04-1A", "C1-04-1B", "C1-04-1C", "C1-05-1A", "C1-05-1B", "C1-05-1C", "C1-06-1A", "C1-06-1B", "C1-06-1C", "C1-07-1A", "C1-07-1B", "C1-07-1C", "C1-08-1A", "C1-08-1B", "C1-08-1C", "C1-09-1A", "C1-09-1B", "C1-09-1C", "C1-10-1A", "C1-10-1B", "C1-10-1C", "C1-11-1A", "C1-11-1B", "C1-11-1C", "C1-12-1A", "C1-12-1B", "C1-12-1C", "C1-13-1A", "C1-13-1B", "C1-13-1C", "C1-14-1A", "C1-14-1B", "C1-14-1C", "C2-01-1A", "C2-01-1B", "C2-01-1C", "C2-02-1A", "C2-02-1B", "C2-02-1C", "C2-03-1A", "C2-03-1B", "C2-03-1C", "C2-04-1A", "C2-04-1B", "C2-04-1C", "C2-05-1A", "C2-05-1B", "C2-05-1C", "C2-06-1A", "C2-06-1B", "C2-06-1C", "C2-07-1A", "C2-07-1B", "C2-07-1C", "C2-08-1A", "C2-08-1B", "C2-08-1C", "C2-09-1A", "C2-09-1B", "C2-09-1C", "C2-10-1A", "C2-10-1B", "C2-10-1C", "C2-11-1A", "C2-11-1B", "C2-11-1C", "C2-12-1A", "C2-12-1B", "C2-12-1C", "C2-13-1A", "C2-13-1B", "C2-13-1C", "C2-14-1A", "C2-14-1B", "C2-14-1C"], "id": "g_C_ALLE_C0"}, {"rayon": "C", "alle": "ALLE C123", "emplacements": ["C1-01-2A", "C1-01-2B", "C1-01-2C", "C1-01-3A", "C1-01-3B", "C1-01-3C", "C1-01-4A", "C1-01-4B", "C1-01-4C", "C1-01-5A", "C1-01-5B", "C1-01-5C", "C1-02-2A", "C1-02-2B", "C1-02-2C", "C1-02-3A", "C1-02-3B", "C1-02-3C", "C1-02-4A", "C1-02-4B", "C1-02-4C", "C1-02-5A", "C1-02-5B", "C1-02-5C", "C1-03-2A", "C1-03-2B", "C1-03-2C", "C1-03-3A", "C1-03-3B", "C1-03-3C", "C1-03-4A", "C1-03-4B", "C1-03-4C", "C1-03-5A", "C1-03-5B", "C1-03-5C", "C1-04-2A", "C1-04-2B", "C1-04-2C", "C1-04-3A", "C1-04-3B", "C1-04-3C", "C1-04-4A", "C1-04-4B", "C1-04-4C", "C1-04-5A", "C1-04-5B", "C1-04-5C", "C1-05-2A", "C1-05-2B", "C1-05-2C", "C1-05-3A", "C1-05-3B", "C1-05-3C", "C1-05-4A", "C1-05-4B", "C1-05-4C", "C1-05-5A", "C1-05-5B", "C1-05-5C", "C1-06-2A", "C1-06-2B", "C1-06-2C", "C1-06-3A", "C1-06-3B", "C1-06-3C", "C1-06-4A", "C1-06-4B", "C1-06-4C", "C1-06-5A", "C1-06-5B", "C1-06-5C", "C1-07-2A", "C1-07-2B", "C1-07-2C", "C1-07-3A", "C1-07-3B", "C1-07-3C", "C1-07-4A", "C1-07-4B", "C1-07-4C", "C1-07-5A", "C1-07-5B", "C1-07-5C", "C1-08-2A", "C1-08-2B", "C1-08-2C", "C1-08-3A", "C1-08-3B", "C1-08-3C", "C1-08-4A", "C1-08-4B", "C1-08-4C", "C1-08-5A", "C1-08-5B", "C1-08-5C", "C1-09-2A", "C1-09-2B", "C1-09-2C", "C1-09-3A", "C1-09-3B", "C1-09-3C", "C1-09-4A", "C1-09-4B", "C1-09-4C", "C1-09-5A", "C1-09-5B", "C1-09-5C", "C1-10-2A", "C1-10-2B", "C1-10-2C", "C1-10-3A", "C1-10-3B", "C1-10-3C", "C1-10-4A", "C1-10-4B", "C1-10-4C", "C1-10-5A", "C1-10-5B", "C1-10-5C", "C1-11-2A", "C1-11-2B", "C1-11-2C", "C1-11-3A", "C1-11-3B", "C1-11-3C", "C1-11-4A", "C1-11-4B", "C1-11-4C", "C1-11-5A", "C1-11-5B", "C1-11-5C", "C1-12-2A", "C1-12-2B", "C1-12-2C", "C1-12-3A", "C1-12-3B", "C1-12-3C", "C1-12-4A", "C1-12-4B", "C1-12-4C", "C1-12-5A", "C1-12-5B", "C1-12-5C", "C1-13-2A", "C1-13-2B", "C1-13-2C", "C1-13-3A", "C1-13-3B", "C1-13-3C", "C1-13-4A", "C1-13-4B", "C1-13-4C", "C1-13-5A", "C1-13-5B", "C1-13-5C", "C1-14-2A", "C1-14-2B", "C1-14-2C", "C1-14-3A", "C1-14-3B", "C1-14-3C", "C1-14-4A", "C1-14-4B", "C1-14-4C", "C1-14-5A", "C1-14-5B", "C1-14-5C", "C2-01-2A", "C2-01-2B", "C2-01-2C", "C2-01-3A", "C2-01-3B", "C2-01-3C", "C2-01-4A", "C2-01-4B", "C2-01-4C", "C2-01-5A", "C2-01-5B", "C2-01-5C", "C2-01-6A", "C2-01-6B", "C2-01-6C", "C2-02-2A", "C2-02-2B", "C2-02-2C", "C2-02-3A", "C2-02-3B", "C2-02-3C", "C2-02-4A", "C2-02-4B", "C2-02-4C", "C2-02-5A", "C2-02-5B", "C2-02-5C", "C2-02-6A", "C2-02-6B", "C2-02-6C", "C2-03-2A", "C2-03-2B", "C2-03-2C", "C2-03-3A", "C2-03-3B", "C2-03-3C", "C2-03-4A", "C2-03-4B", "C2-03-4C", "C2-03-5A", "C2-03-5B", "C2-03-5C", "C2-03-6A", "C2-03-6B", "C2-03-6C", "C2-04-2A", "C2-04-2B", "C2-04-2C", "C2-04-3A", "C2-04-3B", "C2-04-3C", "C2-04-4A", "C2-04-4B", "C2-04-4C", "C2-04-5A", "C2-04-5B", "C2-04-5C", "C2-04-6A", "C2-04-6B", "C2-04-6C", "C2-05-2A", "C2-05-2B", "C2-05-2C", "C2-05-3A", "C2-05-3B", "C2-05-3C", "C2-05-4A", "C2-05-4B", "C2-05-4C", "C2-05-5A", "C2-05-5B", "C2-05-5C", "C2-05-6A", "C2-05-6B", "C2-05-6C", "C2-06-2A", "C2-06-2B", "C2-06-2C", "C2-06-3A", "C2-06-3B", "C2-06-3C", "C2-06-4A", "C2-06-4B", "C2-06-4C", "C2-06-5A", "C2-06-5B", "C2-06-5C", "C2-06-6A", "C2-06-6B", "C2-06-6C", "C2-07-2A", "C2-07-2B", "C2-07-2C", "C2-07-3A", "C2-07-3B", "C2-07-3C", "C2-07-4A", "C2-07-4B", "C2-07-4C", "C2-07-5A", "C2-07-5B", "C2-07-5C", "C2-07-6A", "C2-07-6B", "C2-07-6C", "C2-08-2A", "C2-08-2B", "C2-08-2C", "C2-08-3A", "C2-08-3B", "C2-08-3C", "C2-08-4A", "C2-08-4B", "C2-08-4C", "C2-08-5A", "C2-08-5B", "C2-08-5C", "C2-08-6A", "C2-08-6B", "C2-08-6C", "C2-09-2A", "C2-09-2B", "C2-09-2C", "C2-09-3A", "C2-09-3B", "C2-09-3C", "C2-09-4A", "C2-09-4B", "C2-09-4C", "C2-09-5A", "C2-09-5B", "C2-09-5C", "C2-09-6A", "C2-09-6B", "C2-09-6C", "C2-10-2A", "C2-10-2B", "C2-10-2C", "C2-10-3A", "C2-10-3B", "C2-10-3C", "C2-10-4A", "C2-10-4B", "C2-10-4C", "C2-10-5A", "C2-10-5B", "C2-10-5C", "C2-10-6A", "C2-10-6B", "C2-10-6C", "C2-11-2A", "C2-11-2B", "C2-11-2C", "C2-11-3A", "C2-11-3B", "C2-11-3C", "C2-11-4A", "C2-11-4B", "C2-11-4C", "C2-11-5A", "C2-11-5B", "C2-11-5C", "C2-11-6A", "C2-11-6B", "C2-11-6C", "C2-12-2A", "C2-12-2B", "C2-12-2C", "C2-12-3A", "C2-12-3B", "C2-12-3C", "C2-12-4A", "C2-12-4B", "C2-12-4C", "C2-12-5A", "C2-12-5B", "C2-12-5C", "C2-12-6A", "C2-12-6B", "C2-12-6C", "C2-13-2A", "C2-13-2B", "C2-13-2C", "C2-13-3A", "C2-13-3B", "C2-13-3C", "C2-13-4A", "C2-13-4B", "C2-13-4C", "C2-13-5A", "C2-13-5B", "C2-13-5C", "C2-13-6A", "C2-13-6B", "C2-13-6C", "C2-14-2A", "C2-14-2B", "C2-14-2C", "C2-14-3A", "C2-14-3B", "C2-14-3C", "C2-14-4A", "C2-14-4B", "C2-14-4C", "C2-14-5A", "C2-14-5B", "C2-14-5C", "C2-14-6A", "C2-14-6B", "C2-14-6C"], "id": "g_C_ALLE_C123"}, {"rayon": "D", "alle": "ALLE D0", "emplacements": ["D1-01-1A", "D1-01-1B", "D1-01-1C", "D1-02-1A", "D1-02-1B", "D1-02-1C", "D1-03-1A", "D1-03-1B", "D1-03-1C", "D1-04-1A", "D1-04-1B", "D1-04-1C", "D1-05-1A", "D1-05-1B", "D1-05-1C", "D1-06-1A", "D1-06-1B", "D1-06-1C", "D1-07-1A", "D1-07-1B", "D1-07-1C", "D1-08-1A", "D1-08-1B", "D1-08-1C", "D1-09-1A", "D1-09-1B", "D1-09-1C", "D1-10-1A", "D1-10-1B", "D1-10-1C", "D1-11-1A", "D1-11-1B", "D1-11-1C", "D1-12-1A", "D1-12-1B", "D1-12-1C", "D1-13-1A", "D1-13-1B", "D1-13-1C", "D1-14-1A", "D1-14-1B", "D1-14-1C", "D2-01-1A", "D2-01-1B", "D2-01-1C", "D2-02-1A", "D2-02-1B", "D2-02-1C", "D2-03-1A", "D2-03-1B", "D2-03-1C", "D2-04-1A", "D2-04-1B", "D2-04-1C", "D2-05-1A", "D2-05-1B", "D2-05-1C", "D2-06-1A", "D2-06-1B", "D2-06-1C", "D2-07-1A", "D2-07-1B", "D2-07-1C", "D2-09-1A", "D2-09-1B", "D2-09-1C", "D2-10-1A", "D2-10-1B", "D2-10-1C", "D2-11-1A", "D2-11-1B", "D2-11-1C", "D2-12-1A", "D2-12-1B", "D2-12-1C", "D2-13-1A", "D2-13-1B", "D2-13-1C", "D2-14-1A", "D2-14-1B", "D2-14-1C"], "id": "g_D_ALLE_D0"}, {"rayon": "D", "alle": "ALLE D123", "emplacements": ["D1-01-2A", "D1-01-2B", "D1-01-2C", "D1-01-3A", "D1-01-3B", "D1-01-3C", "D1-01-4A", "D1-01-4B", "D1-01-4C", "D1-01-5A", "D1-01-5B", "D1-01-5C", "D1-02-2A", "D1-02-2B", "D1-02-2C", "D1-02-3A", "D1-02-3B", "D1-02-3C", "D1-02-4A", "D1-02-4B", "D1-02-4C", "D1-02-5A", "D1-02-5B", "D1-02-5C", "D1-03-2A", "D1-03-2B", "D1-03-2C", "D1-03-3A", "D1-03-3B", "D1-03-3C", "D1-03-4A", "D1-03-4B", "D1-03-4C", "D1-03-5A", "D1-03-5B", "D1-03-5C", "D1-04-2A", "D1-04-2B", "D1-04-2C", "D1-04-3A", "D1-04-3B", "D1-04-3C", "D1-04-4A", "D1-04-4B", "D1-04-4C", "D1-04-5A", "D1-04-5B", "D1-04-5C", "D1-05-2A", "D1-05-2B", "D1-05-2C", "D1-05-3A", "D1-05-3B", "D1-05-3C", "D1-05-4A", "D1-05-4B", "D1-05-4C", "D1-05-5A", "D1-05-5B", "D1-05-5C", "D1-06-2A", "D1-06-2B", "D1-06-2C", "D1-06-3A", "D1-06-3B", "D1-06-3C", "D1-06-4A", "D1-06-4B", "D1-06-4C", "D1-06-5A", "D1-06-5B", "D1-06-5C", "D1-07-2A", "D1-07-2B", "D1-07-2C", "D1-07-3A", "D1-07-3B", "D1-07-3C", "D1-07-4A", "D1-07-4B", "D1-07-4C", "D1-07-5A", "D1-07-5B", "D1-07-5C", "D1-08-2A", "D1-08-2B", "D1-08-2C", "D1-08-3A", "D1-08-3B", "D1-08-3C", "D1-08-4A", "D1-08-4B", "D1-08-4C", "D1-08-5A", "D1-08-5B", "D1-08-5C", "D1-09-2A", "D1-09-2B", "D1-09-2C", "D1-09-3A", "D1-09-3B", "D1-09-3C", "D1-09-4A", "D1-09-4B", "D1-09-4C", "D1-09-5A", "D1-09-5B", "D1-09-5C", "D1-10-2A", "D1-10-2B", "D1-10-2C", "D1-10-3A", "D1-10-3B", "D1-10-3C", "D1-10-4A", "D1-10-4B", "D1-10-4C", "D1-10-5A", "D1-10-5B", "D1-10-5C", "D1-11-2A", "D1-11-2B", "D1-11-2C", "D1-11-3A", "D1-11-3B", "D1-11-3C", "D1-11-4A", "D1-11-4B", "D1-11-4C", "D1-11-5A", "D1-11-5B", "D1-11-5C", "D1-12-2A", "D1-12-2B", "D1-12-2C", "D1-12-3A", "D1-12-3B", "D1-12-3C", "D1-12-4A", "D1-12-4B", "D1-12-4C", "D1-12-5A", "D1-12-5B", "D1-12-5C", "D1-13-2A", "D1-13-2B", "D1-13-2C", "D1-13-3A", "D1-13-3B", "D1-13-3C", "D1-13-4A", "D1-13-4B", "D1-13-4C", "D1-13-5A", "D1-13-5B", "D1-13-5C", "D1-14-2A", "D1-14-2B", "D1-14-2C", "D1-14-3A", "D1-14-3B", "D1-14-3C", "D1-14-4A", "D1-14-4B", "D1-14-4C", "D1-14-5A", "D1-14-5B", "D1-14-5C", "D2-01-2A", "D2-01-2B", "D2-01-2C", "D2-01-3A", "D2-01-3B", "D2-01-3C", "D2-01-4A", "D2-01-4B", "D2-01-4C", "D2-01-5A", "D2-01-5B", "D2-01-5C", "D2-02-2A", "D2-02-2B", "D2-02-2C", "D2-02-3A", "D2-02-3B", "D2-02-3C", "D2-02-4A", "D2-02-4B", "D2-02-4C", "D2-02-5A", "D2-02-5B", "D2-02-5C", "D2-03-2A", "D2-03-2B", "D2-03-2C", "D2-03-3A", "D2-03-3B", "D2-03-3C", "D2-03-4A", "D2-03-4B", "D2-03-4C", "D2-03-5A", "D2-03-5B", "D2-03-5C", "D2-04-2A", "D2-04-2B", "D2-04-2C", "D2-04-3A", "D2-04-3B", "D2-04-3C", "D2-04-4A", "D2-04-4B", "D2-04-4C", "D2-04-5A", "D2-04-5B", "D2-04-5C", "D2-05-2A", "D2-05-2B", "D2-05-2C", "D2-05-3A", "D2-05-3B", "D2-05-3C", "D2-05-4A", "D2-05-4B", "D2-05-4C", "D2-05-5A", "D2-05-5B", "D2-05-5C", "D2-06-2A", "D2-06-2B", "D2-06-2C", "D2-06-3A", "D2-06-3B", "D2-06-3C", "D2-06-4A", "D2-06-4B", "D2-06-4C", "D2-06-5A", "D2-06-5B", "D2-06-5C", "D2-07-2A", "D2-07-2B", "D2-07-2C", "D2-07-3A", "D2-07-3B", "D2-07-3C", "D2-07-4A", "D2-07-4B", "D2-07-4C", "D2-07-5A", "D2-07-5B", "D2-07-5C", "D2-08-3A", "D2-08-3B", "D2-08-3C", "D2-08-4A", "D2-08-4B", "D2-08-4C", "D2-08-5A", "D2-08-5B", "D2-08-5C", "D2-09-2A", "D2-09-2B", "D2-09-2C", "D2-09-3A", "D2-09-3B", "D2-09-3C", "D2-09-4A", "D2-09-4B", "D2-09-4C", "D2-09-5A", "D2-09-5B", "D2-09-5C", "D2-10-2A", "D2-10-2B", "D2-10-2C", "D2-10-3A", "D2-10-3B", "D2-10-3C", "D2-10-4A", "D2-10-4B", "D2-10-4C", "D2-10-5A", "D2-10-5B", "D2-10-5C", "D2-11-2A", "D2-11-2B", "D2-11-2C", "D2-11-3A", "D2-11-3B", "D2-11-3C", "D2-11-4A", "D2-11-4B", "D2-11-4C", "D2-11-5A", "D2-11-5B", "D2-11-5C", "D2-12-2A", "D2-12-2B", "D2-12-2C", "D2-12-3A", "D2-12-3B", "D2-12-3C", "D2-12-4A", "D2-12-4B", "D2-12-4C", "D2-12-5A", "D2-12-5B", "D2-12-5C", "D2-13-2A", "D2-13-2B", "D2-13-2C", "D2-13-3A", "D2-13-3B", "D2-13-3C", "D2-13-4A", "D2-13-4B", "D2-13-4C", "D2-13-5A", "D2-13-5B", "D2-13-5C", "D2-14-2A", "D2-14-2B", "D2-14-2C", "D2-14-3A", "D2-14-3B", "D2-14-3C", "D2-14-4A", "D2-14-4B", "D2-14-4C", "D2-14-5A", "D2-14-5B", "D2-14-5C"], "id": "g_D_ALLE_D123"}, {"rayon": "E", "alle": "ALLE E0", "emplacements": ["E1-01-1A", "E1-01-1B", "E1-01-1C", "E1-02-1A", "E1-02-1B", "E1-02-1C", "E1-03-1A", "E1-03-1B", "E1-03-1C", "E1-04-1A", "E1-04-1B", "E1-04-1C", "E1-05-1A", "E1-05-1B", "E1-05-1C", "E1-06-1A", "E1-06-1B", "E1-06-1C", "E1-07-1A", "E1-07-1B", "E1-07-1C", "E1-09-1A", "E1-09-1B", "E1-09-1C", "E1-10-1A", "E1-10-1B", "E1-10-1C", "E1-11-1A", "E1-11-1B", "E1-11-1C", "E1-12-1A", "E1-12-1B", "E1-12-1C", "E1-13-1A", "E1-13-1B", "E1-13-1C", "E1-14-1A", "E1-14-1B", "E1-14-1C", "E2-01-1A", "E2-01-1B", "E2-01-1C", "E2-02-1A", "E2-02-1B", "E2-02-1C", "E2-03-1A", "E2-03-1B", "E2-03-1C", "E2-04-1A", "E2-04-1B", "E2-04-1C", "E2-05-1A", "E2-05-1B", "E2-05-1C", "E2-06-1A", "E2-06-1B", "E2-06-1C", "E2-07-1A", "E2-07-1B", "E2-07-1C", "E2-09-1A", "E2-09-1B", "E2-09-1C", "E2-10-1A", "E2-10-1B", "E2-10-1C", "E2-11-1A", "E2-11-1B", "E2-11-1C", "E2-12-1A", "E2-12-1B", "E2-12-1C", "E2-13-1A", "E2-13-1B", "E2-13-1C", "E2-14-1A", "E2-14-1B", "E2-14-1C"], "id": "g_E_ALLE_E0"}, {"rayon": "E", "alle": "ALLE E123", "emplacements": ["E1-01-2A", "E1-01-2B", "E1-01-2C", "E1-01-3A", "E1-01-3B", "E1-01-3C", "E1-01-4A", "E1-01-4B", "E1-01-4C", "E1-01-5A", "E1-01-5B", "E1-01-5C", "E1-02-2A", "E1-02-2B", "E1-02-2C", "E1-02-3A", "E1-02-3B", "E1-02-3C", "E1-02-4A", "E1-02-4B", "E1-02-4C", "E1-02-5A", "E1-02-5B", "E1-02-5C", "E1-03-2A", "E1-03-2B", "E1-03-2C", "E1-03-3A", "E1-03-3B", "E1-03-3C", "E1-03-4A", "E1-03-4B", "E1-03-4C", "E1-03-5A", "E1-03-5B", "E1-03-5C", "E1-04-2A", "E1-04-2B", "E1-04-2C", "E1-04-3A", "E1-04-3B", "E1-04-3C", "E1-04-4A", "E1-04-4B", "E1-04-4C", "E1-04-5A", "E1-04-5B", "E1-04-5C", "E1-05-2A", "E1-05-2B", "E1-05-2C", "E1-05-3A", "E1-05-3B", "E1-05-3C", "E1-05-4A", "E1-05-4B", "E1-05-4C", "E1-05-5A", "E1-05-5B", "E1-05-5C", "E1-06-2A", "E1-06-2B", "E1-06-2C", "E1-06-3A", "E1-06-3B", "E1-06-3C", "E1-06-4A", "E1-06-4B", "E1-06-4C", "E1-06-5A", "E1-06-5B", "E1-06-5C", "E1-07-2A", "E1-07-2B", "E1-07-2C", "E1-07-3A", "E1-07-3B", "E1-07-3C", "E1-07-4A", "E1-07-4B", "E1-07-4C", "E1-07-5A", "E1-07-5B", "E1-07-5C", "E1-08-3A", "E1-08-3B", "E1-08-3C", "E1-08-4A", "E1-08-4B", "E1-08-4C", "E1-08-5A", "E1-08-5B", "E1-08-5C", "E1-09-2A", "E1-09-2B", "E1-09-2C", "E1-09-3A", "E1-09-3B", "E1-09-3C", "E1-09-4A", "E1-09-4B", "E1-09-4C", "E1-09-5A", "E1-09-5B", "E1-09-5C", "E1-10-2A", "E1-10-2B", "E1-10-2C", "E1-10-3A", "E1-10-3B", "E1-10-3C", "E1-10-4A", "E1-10-4B", "E1-10-4C", "E1-10-5A", "E1-10-5B", "E1-10-5C", "E1-11-2A", "E1-11-2B", "E1-11-2C", "E1-11-3A", "E1-11-3B", "E1-11-3C", "E1-11-4A", "E1-11-4B", "E1-11-4C", "E1-11-5A", "E1-11-5B", "E1-11-5C", "E1-12-2A", "E1-12-2B", "E1-12-2C", "E1-12-3A", "E1-12-3B", "E1-12-3C", "E1-12-4A", "E1-12-4B", "E1-12-4C", "E1-12-5A", "E1-12-5B", "E1-12-5C", "E1-13-2A", "E1-13-2B", "E1-13-2C", "E1-13-3A", "E1-13-3B", "E1-13-3C", "E1-13-4A", "E1-13-4B", "E1-13-4C", "E1-13-5A", "E1-13-5B", "E1-13-5C", "E1-14-2A", "E1-14-2B", "E1-14-2C", "E1-14-3A", "E1-14-3B", "E1-14-3C", "E1-14-4A", "E1-14-4B", "E1-14-4C", "E1-14-5A", "E1-14-5B", "E1-14-5C", "E2-01-2A", "E2-01-2B", "E2-01-2C", "E2-01-3A", "E2-01-3B", "E2-01-3C", "E2-01-4A", "E2-01-4B", "E2-01-4C", "E2-01-5A", "E2-01-5B", "E2-01-5C", "E2-02-2A", "E2-02-2B", "E2-02-2C", "E2-02-3A", "E2-02-3B", "E2-02-3C", "E2-02-4A", "E2-02-4B", "E2-02-4C", "E2-02-5A", "E2-02-5B", "E2-02-5C", "E2-03-2A", "E2-03-2B", "E2-03-2C", "E2-03-3A", "E2-03-3B", "E2-03-3C", "E2-03-4A", "E2-03-4B", "E2-03-4C", "E2-03-5A", "E2-03-5B", "E2-03-5C", "E2-04-2A", "E2-04-2B", "E2-04-2C", "E2-04-3A", "E2-04-3B", "E2-04-3C", "E2-04-4A", "E2-04-4B", "E2-04-4C", "E2-04-5A", "E2-04-5B", "E2-04-5C", "E2-05-2A", "E2-05-2B", "E2-05-2C", "E2-05-3A", "E2-05-3B", "E2-05-3C", "E2-05-4A", "E2-05-4B", "E2-05-4C", "E2-05-5A", "E2-05-5B", "E2-05-5C", "E2-06-2A", "E2-06-2B", "E2-06-2C", "E2-06-3A", "E2-06-3B", "E2-06-3C", "E2-06-4A", "E2-06-4B", "E2-06-4C", "E2-06-5A", "E2-06-5B", "E2-06-5C", "E2-07-2A", "E2-07-2B", "E2-07-2C", "E2-07-3A", "E2-07-3B", "E2-07-3C", "E2-07-4A", "E2-07-4B", "E2-07-4C", "E2-07-5A", "E2-07-5B", "E2-07-5C", "E2-08-3A", "E2-08-3B", "E2-08-3C", "E2-08-4A", "E2-08-4B", "E2-08-4C", "E2-08-5A", "E2-08-5B", "E2-08-5C", "E2-09-2A", "E2-09-2B", "E2-09-2C", "E2-09-3A", "E2-09-3B", "E2-09-3C", "E2-09-4A", "E2-09-4B", "E2-09-4C", "E2-09-5A", "E2-09-5B", "E2-09-5C", "E2-10-2A", "E2-10-2B", "E2-10-2C", "E2-10-3A", "E2-10-3B", "E2-10-3C", "E2-10-4A", "E2-10-4B", "E2-10-4C", "E2-10-5A", "E2-10-5B", "E2-10-5C", "E2-11-2A", "E2-11-2B", "E2-11-2C", "E2-11-3A", "E2-11-3B", "E2-11-3C", "E2-11-4A", "E2-11-4B", "E2-11-4C", "E2-11-5A", "E2-11-5B", "E2-11-5C", "E2-12-2A", "E2-12-2B", "E2-12-2C", "E2-12-3A", "E2-12-3B", "E2-12-3C", "E2-12-4A", "E2-12-4B", "E2-12-4C", "E2-12-5A", "E2-12-5B", "E2-12-5C", "E2-13-2A", "E2-13-2B", "E2-13-2C", "E2-13-3A", "E2-13-3B", "E2-13-3C", "E2-13-4A", "E2-13-4B", "E2-13-4C", "E2-13-5A", "E2-13-5B", "E2-13-5C", "E2-14-2A", "E2-14-2B", "E2-14-2C", "E2-14-3A", "E2-14-3B", "E2-14-3C", "E2-14-4A", "E2-14-4B", "E2-14-4C", "E2-14-5A", "E2-14-5B", "E2-14-5C"], "id": "g_E_ALLE_E123"}, {"rayon": "F", "alle": "ALLE F0", "emplacements": ["F1-01-1A", "F1-01-1B", "F1-01-1C", "F1-02-1A", "F1-02-1B", "F1-02-1C", "F1-03-1A", "F1-03-1B", "F1-03-1C", "F1-04-1A", "F1-04-1B", "F1-04-1C", "F1-05-1A", "F1-05-1B", "F1-05-1C", "F1-06-1A", "F1-06-1B", "F1-06-1C", "F1-07-1A", "F1-07-1B", "F1-07-1C", "F1-09-1A", "F1-09-1B", "F1-09-1C", "F1-10-1A", "F1-10-1B", "F1-10-1C", "F1-11-1A", "F1-11-1B", "F1-11-1C", "F1-12-1A", "F1-12-1B", "F1-12-1C", "F1-13-1A", "F1-13-1B", "F1-13-1C", "F1-14-1A", "F1-14-1B", "F1-14-1C", "F2-01-1A", "F2-01-1B", "F2-01-1C", "F2-02-1A", "F2-02-1B", "F2-02-1C", "F2-03-1A", "F2-03-1B", "F2-03-1C", "F2-04-1A", "F2-04-1B", "F2-04-1C", "F2-05-1A", "F2-05-1B", "F2-05-1C", "F2-06-1A", "F2-06-1B", "F2-06-1C", "F2-07-1A", "F2-07-1B", "F2-07-1C", "F2-09-1A", "F2-09-1B", "F2-09-1C", "F2-10-1A", "F2-10-1B", "F2-10-1C", "F2-11-1A", "F2-11-1B", "F2-11-1C", "F2-12-1A", "F2-12-1B", "F2-12-1C", "F2-13-1A", "F2-13-1B", "F2-13-1C", "F2-14-1A", "F2-14-1B", "F2-14-1C"], "id": "g_F_ALLE_F0"}, {"rayon": "F", "alle": "ALLE F123", "emplacements": ["F1-01-2A", "F1-01-2B", "F1-01-2C", "F1-01-3A", "F1-01-3B", "F1-01-3C", "F1-01-4A", "F1-01-4B", "F1-01-4C", "F1-01-5A", "F1-01-5B", "F1-01-5C", "F1-02-2A", "F1-02-2B", "F1-02-2C", "F1-02-3A", "F1-02-3B", "F1-02-3C", "F1-02-4A", "F1-02-4B", "F1-02-4C", "F1-02-5A", "F1-02-5B", "F1-02-5C", "F1-03-2A", "F1-03-2B", "F1-03-2C", "F1-03-3A", "F1-03-3B", "F1-03-3C", "F1-03-4A", "F1-03-4B", "F1-03-4C", "F1-03-5A", "F1-03-5B", "F1-03-5C", "F1-04-2A", "F1-04-2B", "F1-04-2C", "F1-04-3A", "F1-04-3B", "F1-04-3C", "F1-04-4A", "F1-04-4B", "F1-04-4C", "F1-04-5A", "F1-04-5B", "F1-04-5C", "F1-05-2A", "F1-05-2B", "F1-05-2C", "F1-05-3A", "F1-05-3B", "F1-05-3C", "F1-05-4A", "F1-05-4B", "F1-05-4C", "F1-05-5A", "F1-05-5B", "F1-05-5C", "F1-06-2A", "F1-06-2B", "F1-06-2C", "F1-06-3A", "F1-06-3B", "F1-06-3C", "F1-06-4A", "F1-06-4B", "F1-06-4C", "F1-06-5A", "F1-06-5B", "F1-06-5C", "F1-07-2A", "F1-07-2B", "F1-07-2C", "F1-07-3A", "F1-07-3B", "F1-07-3C", "F1-07-4A", "F1-07-4B", "F1-07-4C", "F1-07-5A", "F1-07-5B", "F1-07-5C", "F1-08-3A", "F1-08-3B", "F1-08-3C", "F1-08-4A", "F1-08-4B", "F1-08-4C", "F1-08-5A", "F1-08-5B", "F1-08-5C", "F1-09-2A", "F1-09-2B", "F1-09-2C", "F1-09-3A", "F1-09-3B", "F1-09-3C", "F1-09-4A", "F1-09-4B", "F1-09-4C", "F1-09-5A", "F1-09-5B", "F1-09-5C", "F1-10-2A", "F1-10-2B", "F1-10-2C", "F1-10-3A", "F1-10-3B", "F1-10-3C", "F1-10-4A", "F1-10-4B", "F1-10-4C", "F1-10-5A", "F1-10-5B", "F1-10-5C", "F1-11-2A", "F1-11-2B", "F1-11-2C", "F1-11-3A", "F1-11-3B", "F1-11-3C", "F1-11-4A", "F1-11-4B", "F1-11-4C", "F1-11-5A", "F1-11-5B", "F1-11-5C", "F1-12-2A", "F1-12-2B", "F1-12-2C", "F1-12-3A", "F1-12-3B", "F1-12-3C", "F1-12-4A", "F1-12-4B", "F1-12-4C", "F1-12-5A", "F1-12-5B", "F1-12-5C", "F1-13-2A", "F1-13-2B", "F1-13-2C", "F1-13-3A", "F1-13-3B", "F1-13-3C", "F1-13-4A", "F1-13-4B", "F1-13-4C", "F1-13-5A", "F1-13-5B", "F1-13-5C", "F1-14-2A", "F1-14-2B", "F1-14-2C", "F1-14-3A", "F1-14-3B", "F1-14-3C", "F1-14-4A", "F1-14-4B", "F1-14-4C", "F1-14-5A", "F1-14-5B", "F1-14-5C", "F2-01-2A", "F2-01-2B", "F2-01-2C", "F2-01-3A", "F2-01-3B", "F2-01-3C", "F2-01-4A", "F2-01-4B", "F2-01-4C", "F2-01-5A", "F2-01-5B", "F2-01-5C", "F2-02-2A", "F2-02-2B", "F2-02-2C", "F2-02-3A", "F2-02-3B", "F2-02-3C", "F2-02-4A", "F2-02-4B", "F2-02-4C", "F2-02-5A", "F2-02-5B", "F2-02-5C", "F2-03-2A", "F2-03-2B", "F2-03-2C", "F2-03-3A", "F2-03-3B", "F2-03-3C", "F2-03-4A", "F2-03-4B", "F2-03-4C", "F2-03-5A", "F2-03-5B", "F2-03-5C", "F2-04-2A", "F2-04-2B", "F2-04-2C", "F2-04-3A", "F2-04-3B", "F2-04-3C", "F2-04-4A", "F2-04-4B", "F2-04-4C", "F2-04-5A", "F2-04-5B", "F2-04-5C", "F2-05-2A", "F2-05-2B", "F2-05-2C", "F2-05-3A", "F2-05-3B", "F2-05-3C", "F2-05-4A", "F2-05-4B", "F2-05-4C", "F2-05-5A", "F2-05-5B", "F2-05-5C", "F2-06-2A", "F2-06-2B", "F2-06-2C", "F2-06-3A", "F2-06-3B", "F2-06-3C", "F2-06-4A", "F2-06-4B", "F2-06-4C", "F2-06-5A", "F2-06-5B", "F2-06-5C", "F2-07-2A", "F2-07-2B", "F2-07-2C", "F2-07-3A", "F2-07-3B", "F2-07-3C", "F2-07-4A", "F2-07-4B", "F2-07-4C", "F2-07-5A", "F2-07-5B", "F2-07-5C", "F2-08-3A", "F2-08-3B", "F2-08-3C", "F2-08-4A", "F2-08-4B", "F2-08-4C", "F2-08-5A", "F2-08-5B", "F2-08-5C", "F2-09-2A", "F2-09-2B", "F2-09-2C", "F2-09-3A", "F2-09-3B", "F2-09-3C", "F2-09-4A", "F2-09-4B", "F2-09-4C", "F2-09-5A", "F2-09-5B", "F2-09-5C", "F2-10-2A", "F2-10-2B", "F2-10-2C", "F2-10-3A", "F2-10-3B", "F2-10-3C", "F2-10-4A", "F2-10-4B", "F2-10-4C", "F2-10-5A", "F2-10-5B", "F2-10-5C", "F2-11-2A", "F2-11-2B", "F2-11-2C", "F2-11-3A", "F2-11-3B", "F2-11-3C", "F2-11-4A", "F2-11-4B", "F2-11-4C", "F2-11-5A", "F2-11-5B", "F2-11-5C", "F2-12-2A", "F2-12-2B", "F2-12-2C", "F2-12-3A", "F2-12-3B", "F2-12-3C", "F2-12-4A", "F2-12-4B", "F2-12-4C", "F2-12-5A", "F2-12-5B", "F2-12-5C", "F2-13-2A", "F2-13-2B", "F2-13-2C", "F2-13-3A", "F2-13-3B", "F2-13-3C", "F2-13-4A", "F2-13-4B", "F2-13-4C", "F2-13-5A", "F2-13-5B", "F2-13-5C", "F2-14-2A", "F2-14-2B", "F2-14-2C", "F2-14-3A", "F2-14-3B", "F2-14-3C", "F2-14-4A", "F2-14-4B", "F2-14-4C", "F2-14-5A", "F2-14-5B", "F2-14-5C"], "id": "g_F_ALLE_F123"}, {"rayon": "G", "alle": "ALLE G0", "emplacements": ["G1-01-1A", "G1-01-1B", "G1-01-1C", "G1-02-1A", "G1-02-1B", "G1-02-1C", "G1-03-1A", "G1-03-1B", "G1-03-1C", "G1-04-1A", "G1-04-1B", "G1-04-1C", "G1-05-1A", "G1-05-1B", "G1-05-1C", "G1-06-1A", "G1-06-1B", "G1-06-1C", "G1-07-1A", "G1-07-1B", "G1-07-1C", "G1-09-1A", "G1-09-1B", "G1-09-1C", "G1-10-1A", "G1-10-1B", "G1-10-1C", "G1-11-1A", "G1-11-1B", "G1-11-1C", "G1-12-1A", "G1-12-1B", "G1-12-1C", "G1-13-1A", "G1-13-1B", "G1-13-1C", "G1-14-1A", "G1-14-1B", "G1-14-1C", "G2-01-1A", "G2-01-1B", "G2-01-1C", "G2-02-1A", "G2-02-1B", "G2-02-1C", "G2-03-1A", "G2-03-1B", "G2-03-1C", "G2-04-1A", "G2-04-1B", "G2-04-1C", "G2-05-1A", "G2-05-1B", "G2-05-1C", "G2-06-1A", "G2-06-1B", "G2-06-1C", "G2-07-1A", "G2-07-1B", "G2-07-1C", "G2-09-1A", "G2-09-1B", "G2-09-1C", "G2-10-1A", "G2-10-1B", "G2-10-1C", "G2-11-1A", "G2-11-1B", "G2-11-1C", "G2-12-1A", "G2-12-1B", "G2-12-1C", "G2-13-1A", "G2-13-1B", "G2-13-1C", "G2-14-1A", "G2-14-1B", "G2-14-1C"], "id": "g_G_ALLE_G0"}, {"rayon": "G", "alle": "ALLE G123", "emplacements": ["G1-01-2A", "G1-01-2B", "G1-01-2C", "G1-01-3A", "G1-01-3B", "G1-01-3C", "G1-01-4A", "G1-01-4B", "G1-01-4C", "G1-01-5A", "G1-01-5B", "G1-01-5C", "G1-02-2A", "G1-02-2B", "G1-02-2C", "G1-02-3A", "G1-02-3B", "G1-02-3C", "G1-02-4A", "G1-02-4B", "G1-02-4C", "G1-02-5A", "G1-02-5B", "G1-02-5C", "G1-03-2A", "G1-03-2B", "G1-03-2C", "G1-03-3A", "G1-03-3B", "G1-03-3C", "G1-03-4A", "G1-03-4B", "G1-03-4C", "G1-03-5A", "G1-03-5B", "G1-03-5C", "G1-04-2A", "G1-04-2B", "G1-04-2C", "G1-04-3A", "G1-04-3B", "G1-04-3C", "G1-04-4A", "G1-04-4B", "G1-04-4C", "G1-04-5A", "G1-04-5B", "G1-04-5C", "G1-05-2A", "G1-05-2B", "G1-05-2C", "G1-05-3A", "G1-05-3B", "G1-05-3C", "G1-05-4A", "G1-05-4B", "G1-05-4C", "G1-05-5A", "G1-05-5B", "G1-05-5C", "G1-06-2A", "G1-06-2B", "G1-06-2C", "G1-06-3A", "G1-06-3B", "G1-06-3C", "G1-06-4A", "G1-06-4B", "G1-06-4C", "G1-06-5A", "G1-06-5B", "G1-06-5C", "G1-07-2A", "G1-07-2B", "G1-07-2C", "G1-07-3A", "G1-07-3B", "G1-07-3C", "G1-07-4A", "G1-07-4B", "G1-07-4C", "G1-07-5A", "G1-07-5B", "G1-07-5C", "G1-08-3A", "G1-08-3B", "G1-08-3C", "G1-08-4A", "G1-08-4B", "G1-08-4C", "G1-08-5A", "G1-08-5B", "G1-08-5C", "G1-09-2A", "G1-09-2B", "G1-09-2C", "G1-09-3A", "G1-09-3B", "G1-09-3C", "G1-09-4A", "G1-09-4B", "G1-09-4C", "G1-09-5A", "G1-09-5B", "G1-09-5C", "G1-10-2A", "G1-10-2B", "G1-10-2C", "G1-10-3A", "G1-10-3B", "G1-10-3C", "G1-10-4A", "G1-10-4B", "G1-10-4C", "G1-10-5A", "G1-10-5B", "G1-10-5C", "G1-11-2A", "G1-11-2B", "G1-11-2C", "G1-11-3A", "G1-11-3B", "G1-11-3C", "G1-11-4A", "G1-11-4B", "G1-11-4C", "G1-11-5A", "G1-11-5B", "G1-11-5C", "G1-12-2A", "G1-12-2B", "G1-12-2C", "G1-12-3A", "G1-12-3B", "G1-12-3C", "G1-12-4A", "G1-12-4B", "G1-12-4C", "G1-12-5A", "G1-12-5B", "G1-12-5C", "G1-13-2A", "G1-13-2B", "G1-13-2C", "G1-13-3A", "G1-13-3B", "G1-13-3C", "G1-13-4A", "G1-13-4B", "G1-13-4C", "G1-13-5A", "G1-13-5B", "G1-13-5C", "G1-14-2A", "G1-14-2B", "G1-14-2C", "G1-14-3A", "G1-14-3B", "G1-14-3C", "G1-14-4A", "G1-14-4B", "G1-14-4C", "G1-14-5A", "G1-14-5B", "G1-14-5C", "G2-01-2A", "G2-01-2B", "G2-01-2C", "G2-01-3A", "G2-01-3B", "G2-01-3C", "G2-01-4A", "G2-01-4B", "G2-01-4C", "G2-01-5A", "G2-01-5B", "G2-01-5C", "G2-02-2A", "G2-02-2B", "G2-02-2C", "G2-02-3A", "G2-02-3B", "G2-02-3C", "G2-02-4A", "G2-02-4B", "G2-02-4C", "G2-02-5A", "G2-02-5B", "G2-02-5C", "G2-03-2A", "G2-03-2B", "G2-03-2C", "G2-03-3A", "G2-03-3B", "G2-03-3C", "G2-03-4A", "G2-03-4B", "G2-03-4C", "G2-03-5A", "G2-03-5B", "G2-03-5C", "G2-04-2A", "G2-04-2B", "G2-04-2C", "G2-04-3A", "G2-04-3B", "G2-04-3C", "G2-04-4A", "G2-04-4B", "G2-04-4C", "G2-04-5A", "G2-04-5B", "G2-04-5C", "G2-05-2A", "G2-05-2B", "G2-05-2C", "G2-05-3A", "G2-05-3B", "G2-05-3C", "G2-05-4A", "G2-05-4B", "G2-05-4C", "G2-05-5A", "G2-05-5B", "G2-05-5C", "G2-06-2A", "G2-06-2B", "G2-06-2C", "G2-06-3A", "G2-06-3B", "G2-06-3C", "G2-06-4A", "G2-06-4B", "G2-06-4C", "G2-06-5A", "G2-06-5B", "G2-06-5C", "G2-07-2A", "G2-07-2B", "G2-07-2C", "G2-07-3A", "G2-07-3B", "G2-07-3C", "G2-07-4A", "G2-07-4B", "G2-07-4C", "G2-07-5A", "G2-07-5B", "G2-07-5C", "G2-08-3A", "G2-08-3B", "G2-08-3C", "G2-08-4A", "G2-08-4B", "G2-08-4C", "G2-08-5A", "G2-08-5B", "G2-08-5C", "G2-09-2A", "G2-09-2B", "G2-09-2C", "G2-09-3A", "G2-09-3B", "G2-09-3C", "G2-09-4A", "G2-09-4B", "G2-09-4C", "G2-09-5A", "G2-09-5B", "G2-09-5C", "G2-10-2A", "G2-10-2B", "G2-10-2C", "G2-10-3A", "G2-10-3B", "G2-10-3C", "G2-10-4A", "G2-10-4B", "G2-10-4C", "G2-10-5A", "G2-10-5B", "G2-10-5C", "G2-11-2A", "G2-11-2B", "G2-11-2C", "G2-11-3A", "G2-11-3B", "G2-11-3C", "G2-11-4A", "G2-11-4B", "G2-11-4C", "G2-11-5A", "G2-11-5B", "G2-11-5C", "G2-12-2A", "G2-12-2B", "G2-12-2C", "G2-12-3A", "G2-12-3B", "G2-12-3C", "G2-12-4A", "G2-12-4B", "G2-12-4C", "G2-12-5A", "G2-12-5B", "G2-12-5C", "G2-13-2A", "G2-13-2B", "G2-13-2C", "G2-13-3A", "G2-13-3B", "G2-13-3C", "G2-13-4A", "G2-13-4B", "G2-13-4C", "G2-13-5A", "G2-13-5B", "G2-13-5C", "G2-14-2A", "G2-14-2B", "G2-14-2C", "G2-14-3A", "G2-14-3B", "G2-14-3C", "G2-14-4A", "G2-14-4B", "G2-14-4C", "G2-14-5A", "G2-14-5B", "G2-14-5C"], "id": "g_G_ALLE_G123"}, {"rayon": "H", "alle": "ALLE H0", "emplacements": ["H1-01-1A", "H1-01-1B", "H1-01-1C", "H1-02-1A", "H1-02-1B", "H1-02-1C", "H1-03-1A", "H1-03-1B", "H1-03-1C", "H1-04-1A", "H1-04-1B", "H1-04-1C", "H1-05-1A", "H1-05-1B", "H1-05-1C", "H1-06-1A", "H1-06-1B", "H1-06-1C", "H1-07-1A", "H1-07-1B", "H1-07-1C", "H1-09-1A", "H1-09-1B", "H1-09-1C", "H1-10-1A", "H1-10-1B", "H1-10-1C", "H1-11-1A", "H1-11-1B", "H1-11-1C", "H1-12-1A", "H1-12-1B", "H1-12-1C", "H1-13-1A", "H1-13-1B", "H1-13-1C", "H1-14-1A", "H1-14-1B", "H1-14-1C", "H2-01-1A", "H2-01-1B", "H2-01-1C", "H2-02-1A", "H2-02-1B", "H2-02-1C", "H2-03-1A", "H2-03-1B", "H2-03-1C", "H2-04-1A", "H2-04-1B", "H2-04-1C", "H2-05-1A", "H2-05-1B", "H2-05-1C", "H2-06-1A", "H2-06-1B", "H2-06-1C", "H2-07-1A", "H2-07-1B", "H2-07-1C", "H2-09-1A", "H2-09-1B", "H2-09-1C", "H2-10-1A", "H2-10-1B", "H2-10-1C", "H2-11-1A", "H2-11-1B", "H2-11-1C", "H2-12-1A", "H2-12-1B", "H2-12-1C", "H2-13-1A", "H2-13-1B", "H2-13-1C", "H2-14-1A", "H2-14-1B", "H2-14-1C"], "id": "g_H_ALLE_H0"}, {"rayon": "H", "alle": "ALLE H123", "emplacements": ["H1-01-2A", "H1-01-2B", "H1-01-2C", "H1-01-3A", "H1-01-3B", "H1-01-3C", "H1-01-4A", "H1-01-4B", "H1-01-4C", "H1-01-5A", "H1-01-5B", "H1-01-5C", "H1-02-2A", "H1-02-2B", "H1-02-2C", "H1-02-3A", "H1-02-3B", "H1-02-3C", "H1-02-4A", "H1-02-4B", "H1-02-4C", "H1-02-5A", "H1-02-5B", "H1-02-5C", "H1-03-2A", "H1-03-2B", "H1-03-2C", "H1-03-3A", "H1-03-3B", "H1-03-3C", "H1-03-4A", "H1-03-4B", "H1-03-4C", "H1-03-5A", "H1-03-5B", "H1-03-5C", "H1-04-2A", "H1-04-2B", "H1-04-2C", "H1-04-3A", "H1-04-3B", "H1-04-3C", "H1-04-4A", "H1-04-4B", "H1-04-4C", "H1-04-5A", "H1-04-5B", "H1-04-5C", "H1-05-2A", "H1-05-2B", "H1-05-2C", "H1-05-3A", "H1-05-3B", "H1-05-3C", "H1-05-4A", "H1-05-4B", "H1-05-4C", "H1-05-5A", "H1-05-5B", "H1-05-5C", "H1-06-2A", "H1-06-2B", "H1-06-2C", "H1-06-3A", "H1-06-3B", "H1-06-3C", "H1-06-4A", "H1-06-4B", "H1-06-4C", "H1-06-5A", "H1-06-5B", "H1-06-5C", "H1-07-2A", "H1-07-2B", "H1-07-2C", "H1-07-3A", "H1-07-3B", "H1-07-3C", "H1-07-4A", "H1-07-4B", "H1-07-4C", "H1-07-5A", "H1-07-5B", "H1-07-5C", "H1-08-3A", "H1-08-3B", "H1-08-3C", "H1-08-4A", "H1-08-4B", "H1-08-4C", "H1-08-5A", "H1-08-5B", "H1-08-5C", "H1-09-2A", "H1-09-2B", "H1-09-2C", "H1-09-3A", "H1-09-3B", "H1-09-3C", "H1-09-4A", "H1-09-4B", "H1-09-4C", "H1-09-5A", "H1-09-5B", "H1-09-5C", "H1-10-2A", "H1-10-2B", "H1-10-2C", "H1-10-3A", "H1-10-3B", "H1-10-3C", "H1-10-4A", "H1-10-4B", "H1-10-4C", "H1-10-5A", "H1-10-5B", "H1-10-5C", "H1-11-2A", "H1-11-2B", "H1-11-2C", "H1-11-3A", "H1-11-3B", "H1-11-3C", "H1-11-4A", "H1-11-4B", "H1-11-4C", "H1-11-5A", "H1-11-5B", "H1-11-5C", "H1-12-2A", "H1-12-2B", "H1-12-2C", "H1-12-3A", "H1-12-3B", "H1-12-3C", "H1-12-4A", "H1-12-4B", "H1-12-4C", "H1-12-5A", "H1-12-5B", "H1-12-5C", "H1-13-2A", "H1-13-2B", "H1-13-2C", "H1-13-3A", "H1-13-3B", "H1-13-3C", "H1-13-4A", "H1-13-4B", "H1-13-4C", "H1-13-5A", "H1-13-5B", "H1-13-5C", "H1-14-2A", "H1-14-2B", "H1-14-2C", "H1-14-3A", "H1-14-3B", "H1-14-3C", "H1-14-4A", "H1-14-4B", "H1-14-4C", "H1-14-5A", "H1-14-5B", "H1-14-5C", "H2-01-2A", "H2-01-2B", "H2-01-2C", "H2-01-3A", "H2-01-3B", "H2-01-3C", "H2-01-4A", "H2-01-4B", "H2-01-4C", "H2-01-5A", "H2-01-5B", "H2-01-5C", "H2-02-2A", "H2-02-2B", "H2-02-2C", "H2-02-3A", "H2-02-3B", "H2-02-3C", "H2-02-4A", "H2-02-4B", "H2-02-4C", "H2-02-5A", "H2-02-5B", "H2-02-5C", "H2-03-2A", "H2-03-2B", "H2-03-2C", "H2-03-3A", "H2-03-3B", "H2-03-3C", "H2-03-4A", "H2-03-4B", "H2-03-4C", "H2-03-5A", "H2-03-5B", "H2-03-5C", "H2-04-2A", "H2-04-2B", "H2-04-2C", "H2-04-3A", "H2-04-3B", "H2-04-3C", "H2-04-4A", "H2-04-4B", "H2-04-4C", "H2-04-5A", "H2-04-5B", "H2-04-5C", "H2-05-2A", "H2-05-2B", "H2-05-2C", "H2-05-3A", "H2-05-3B", "H2-05-3C", "H2-05-4A", "H2-05-4B", "H2-05-4C", "H2-05-5A", "H2-05-5B", "H2-05-5C", "H2-06-2A", "H2-06-2B", "H2-06-2C", "H2-06-3A", "H2-06-3B", "H2-06-3C", "H2-06-4A", "H2-06-4B", "H2-06-4C", "H2-06-5A", "H2-06-5B", "H2-06-5C", "H2-07-2A", "H2-07-2B", "H2-07-2C", "H2-07-3A", "H2-07-3B", "H2-07-3C", "H2-07-4A", "H2-07-4B", "H2-07-4C", "H2-07-5A", "H2-07-5B", "H2-07-5C", "H2-08-3A", "H2-08-3B", "H2-08-3C", "H2-08-4A", "H2-08-4B", "H2-08-4C", "H2-08-5A", "H2-08-5B", "H2-08-5C", "H2-09-2A", "H2-09-2B", "H2-09-2C", "H2-09-3A", "H2-09-3B", "H2-09-3C", "H2-09-4A", "H2-09-4B", "H2-09-4C", "H2-09-5A", "H2-09-5B", "H2-09-5C", "H2-10-2A", "H2-10-2B", "H2-10-2C", "H2-10-3A", "H2-10-3B", "H2-10-3C", "H2-10-4A", "H2-10-4B", "H2-10-4C", "H2-10-5A", "H2-10-5B", "H2-10-5C", "H2-11-2A", "H2-11-2B", "H2-11-2C", "H2-11-3A", "H2-11-3B", "H2-11-3C", "H2-11-4A", "H2-11-4B", "H2-11-4C", "H2-11-5A", "H2-11-5B", "H2-11-5C", "H2-12-2A", "H2-12-2B", "H2-12-2C", "H2-12-3A", "H2-12-3B", "H2-12-3C", "H2-12-4A", "H2-12-4B", "H2-12-4C", "H2-12-5A", "H2-12-5B", "H2-12-5C", "H2-13-2A", "H2-13-2B", "H2-13-2C", "H2-13-3A", "H2-13-3B", "H2-13-3C", "H2-13-4A", "H2-13-4B", "H2-13-4C", "H2-13-5A", "H2-13-5B", "H2-13-5C", "H2-14-2A", "H2-14-2B", "H2-14-2C", "H2-14-3A", "H2-14-3B", "H2-14-3C", "H2-14-4A", "H2-14-4B", "H2-14-4C", "H2-14-5A", "H2-14-5B", "H2-14-5C"], "id": "g_H_ALLE_H123"}, {"rayon": "I", "alle": "ALLE I0", "emplacements": ["I1-01-1A", "I1-01-1B", "I1-01-1C", "I1-02-1A", "I1-02-1B", "I1-02-1C", "I1-03-1A", "I1-03-1B", "I1-03-1C", "I1-04-1A", "I1-04-1B", "I1-04-1C", "I1-05-1A", "I1-05-1B", "I1-05-1C", "I1-06-1A", "I1-06-1B", "I1-06-1C", "I1-07-1A", "I1-07-1B", "I1-07-1C", "I1-08-1A", "I1-08-1B", "I1-08-1C", "I1-09-1A", "I1-09-1B", "I1-09-1C", "I1-10-1A", "I1-10-1B", "I1-10-1C", "I1-11-1A", "I1-11-1B", "I1-11-1C", "I1-12-1A", "I1-12-1B", "I1-12-1C", "I1-13-1A", "I1-13-1B", "I1-13-1C", "I1-14-1A", "I1-14-1B", "I1-14-1C", "I2-01-1A", "I2-01-1B", "I2-01-1C", "I2-02-1A", "I2-02-1B", "I2-02-1C", "I2-03-1A", "I2-03-1B", "I2-03-1C", "I2-04-1A", "I2-04-1B", "I2-04-1C", "I2-05-1A", "I2-05-1B", "I2-05-1C", "I2-06-1A", "I2-06-1B", "I2-06-1C", "I2-07-1A", "I2-07-1B", "I2-07-1C", "I2-09-1A", "I2-09-1B", "I2-09-1C", "I2-10-1A", "I2-10-1B", "I2-10-1C", "I2-11-1A", "I2-11-1B", "I2-11-1C", "I2-12-1A", "I2-12-1B", "I2-12-1C", "I2-13-1A", "I2-13-1B", "I2-13-1C", "I2-14-1A", "I2-14-1B", "I2-14-1C"], "id": "g_I_ALLE_I0"}, {"rayon": "I", "alle": "ALLE I123", "emplacements": ["I1-01-2A", "I1-01-2B", "I1-01-2C", "I1-01-3A", "I1-01-3B", "I1-01-3C", "I1-01-4A", "I1-01-4B", "I1-01-4C", "I1-01-5A", "I1-01-5B", "I1-01-5C", "I1-02-2A", "I1-02-2B", "I1-02-2C", "I1-02-3A", "I1-02-3B", "I1-02-3C", "I1-02-4A", "I1-02-4B", "I1-02-4C", "I1-02-5A", "I1-02-5B", "I1-02-5C", "I1-03-2A", "I1-03-2B", "I1-03-2C", "I1-03-3A", "I1-03-3B", "I1-03-3C", "I1-03-4A", "I1-03-4B", "I1-03-4C", "I1-03-5A", "I1-03-5B", "I1-03-5C", "I1-04-2A", "I1-04-2B", "I1-04-2C", "I1-04-3A", "I1-04-3B", "I1-04-3C", "I1-04-4A", "I1-04-4B", "I1-04-4C", "I1-04-5A", "I1-04-5B", "I1-04-5C", "I1-05-2A", "I1-05-2B", "I1-05-2C", "I1-05-3A", "I1-05-3B", "I1-05-3C", "I1-05-4A", "I1-05-4B", "I1-05-4C", "I1-05-5A", "I1-05-5B", "I1-05-5C", "I1-06-2A", "I1-06-2B", "I1-06-2C", "I1-06-3A", "I1-06-3B", "I1-06-3C", "I1-06-4A", "I1-06-4B", "I1-06-4C", "I1-06-5A", "I1-06-5B", "I1-06-5C", "I1-07-2A", "I1-07-2B", "I1-07-2C", "I1-07-3A", "I1-07-3B", "I1-07-3C", "I1-07-4A", "I1-07-4B", "I1-07-4C", "I1-07-5A", "I1-07-5B", "I1-07-5C", "I1-08-2A", "I1-08-2B", "I1-08-2C", "I1-08-3A", "I1-08-3B", "I1-08-3C", "I1-08-4A", "I1-08-4B", "I1-08-4C", "I1-08-5A", "I1-08-5B", "I1-08-5C", "I1-09-2A", "I1-09-2B", "I1-09-2C", "I1-09-3A", "I1-09-3B", "I1-09-3C", "I1-09-4A", "I1-09-4B", "I1-09-4C", "I1-09-5A", "I1-09-5B", "I1-09-5C", "I1-10-2A", "I1-10-2B", "I1-10-2C", "I1-10-3A", "I1-10-3B", "I1-10-3C", "I1-10-4A", "I1-10-4B", "I1-10-4C", "I1-10-5A", "I1-10-5B", "I1-10-5C", "I1-11-2A", "I1-11-2B", "I1-11-2C", "I1-11-3A", "I1-11-3B", "I1-11-3C", "I1-11-4A", "I1-11-4B", "I1-11-4C", "I1-11-5A", "I1-11-5B", "I1-11-5C", "I1-12-2A", "I1-12-2B", "I1-12-2C", "I1-12-3A", "I1-12-3B", "I1-12-3C", "I1-12-4A", "I1-12-4B", "I1-12-4C", "I1-12-5A", "I1-12-5B", "I1-12-5C", "I1-13-2A", "I1-13-2B", "I1-13-2C", "I1-13-3A", "I1-13-3B", "I1-13-3C", "I1-13-4A", "I1-13-4B", "I1-13-4C", "I1-13-5A", "I1-13-5B", "I1-13-5C", "I1-14-2A", "I1-14-2B", "I1-14-2C", "I1-14-3A", "I1-14-3B", "I1-14-3C", "I1-14-4A", "I1-14-4B", "I1-14-4C", "I1-14-5A", "I1-14-5B", "I1-14-5C", "I2-01-2A", "I2-01-2B", "I2-01-2C", "I2-01-3A", "I2-01-3B", "I2-01-3C", "I2-01-4A", "I2-01-4B", "I2-01-4C", "I2-01-5A", "I2-01-5B", "I2-01-5C", "I2-02-2A", "I2-02-2B", "I2-02-2C", "I2-02-3A", "I2-02-3B", "I2-02-3C", "I2-02-4A", "I2-02-4B", "I2-02-4C", "I2-02-5A", "I2-02-5B", "I2-02-5C", "I2-03-2A", "I2-03-2B", "I2-03-2C", "I2-03-3A", "I2-03-3B", "I2-03-3C", "I2-03-4A", "I2-03-4B", "I2-03-4C", "I2-03-5A", "I2-03-5B", "I2-03-5C", "I2-04-2A", "I2-04-2B", "I2-04-2C", "I2-04-3A", "I2-04-3B", "I2-04-3C", "I2-04-4A", "I2-04-4B", "I2-04-4C", "I2-04-5A", "I2-04-5B", "I2-04-5C", "I2-05-2A", "I2-05-2B", "I2-05-2C", "I2-05-3A", "I2-05-3B", "I2-05-3C", "I2-05-4A", "I2-05-4B", "I2-05-4C", "I2-05-5A", "I2-05-5B", "I2-05-5C", "I2-06-2A", "I2-06-2B", "I2-06-2C", "I2-06-3A", "I2-06-3B", "I2-06-3C", "I2-06-4A", "I2-06-4B", "I2-06-4C", "I2-06-5A", "I2-06-5B", "I2-06-5C", "I2-07-2A", "I2-07-2B", "I2-07-2C", "I2-07-3A", "I2-07-3B", "I2-07-3C", "I2-07-4A", "I2-07-4B", "I2-07-4C", "I2-07-5A", "I2-07-5B", "I2-07-5C", "I2-08-3A", "I2-08-3B", "I2-08-3C", "I2-08-4A", "I2-08-4B", "I2-08-4C", "I2-08-5A", "I2-08-5B", "I2-08-5C", "I2-09-2A", "I2-09-2B", "I2-09-2C", "I2-09-3A", "I2-09-3B", "I2-09-3C", "I2-09-4A", "I2-09-4B", "I2-09-4C", "I2-09-5A", "I2-09-5B", "I2-09-5C", "I2-10-2A", "I2-10-2B", "I2-10-2C", "I2-10-3A", "I2-10-3B", "I2-10-3C", "I2-10-4A", "I2-10-4B", "I2-10-4C", "I2-10-5A", "I2-10-5B", "I2-10-5C", "I2-11-2A", "I2-11-2B", "I2-11-2C", "I2-11-3A", "I2-11-3B", "I2-11-3C", "I2-11-4A", "I2-11-4B", "I2-11-4C", "I2-11-5A", "I2-11-5B", "I2-11-5C", "I2-12-2A", "I2-12-2B", "I2-12-2C", "I2-12-3A", "I2-12-3B", "I2-12-3C", "I2-12-4A", "I2-12-4B", "I2-12-4C", "I2-12-5A", "I2-12-5B", "I2-12-5C", "I2-13-2A", "I2-13-2B", "I2-13-2C", "I2-13-3A", "I2-13-3B", "I2-13-3C", "I2-13-4A", "I2-13-4B", "I2-13-4C", "I2-13-5A", "I2-13-5B", "I2-13-5C", "I2-14-2A", "I2-14-2B", "I2-14-2C", "I2-14-3A", "I2-14-3B", "I2-14-3C", "I2-14-4A", "I2-14-4B", "I2-14-4C", "I2-14-5A", "I2-14-5B", "I2-14-5C"], "id": "g_I_ALLE_I123"}, {"rayon": "J", "alle": "ALLE J0", "emplacements": ["J1-01-1A", "J1-01-1B", "J1-01-1C", "J1-02-1A", "J1-02-1B", "J1-02-1C", "J1-03-1A", "J1-03-1B", "J1-03-1C", "J1-04-1A", "J1-04-1B", "J1-04-1C", "J1-05-1A", "J1-05-1B", "J1-05-1C", "J1-06-1A", "J1-06-1B", "J1-06-1C", "J1-07-1A", "J1-07-1B", "J1-07-1C", "J1-09-1A", "J1-09-1B", "J1-09-1C", "J1-10-1A", "J1-10-1B", "J1-10-1C", "J1-11-1A", "J1-11-1B", "J1-11-1C", "J1-12-1A", "J1-12-1B", "J1-12-1C", "J1-13-1A", "J1-13-1B", "J1-13-1C", "J1-14-1A", "J1-14-1B", "J1-14-1C", "J2-01-1A", "J2-01-1B", "J2-01-1C", "J2-02-1A", "J2-02-1B", "J2-02-1C", "J2-03-1A", "J2-03-1B", "J2-03-1C", "J2-04-1A", "J2-04-1B", "J2-04-1C", "J2-05-1A", "J2-05-1B", "J2-05-1C", "J2-06-1A", "J2-06-1B", "J2-06-1C", "J2-07-1A", "J2-07-1B", "J2-07-1C", "J2-09-1A", "J2-09-1B", "J2-09-1C", "J2-10-1A", "J2-10-1B", "J2-10-1C", "J2-11-1A", "J2-11-1B", "J2-11-1C", "J2-12-1A", "J2-12-1B", "J2-12-1C", "J2-13-1A", "J2-13-1B", "J2-13-1C", "J2-14-1A", "J2-14-1B", "J2-14-1C"], "id": "g_J_ALLE_J0"}, {"rayon": "J", "alle": "ALLE J123", "emplacements": ["J1-01-2A", "J1-01-2B", "J1-01-2C", "J1-01-3A", "J1-01-3B", "J1-01-3C", "J1-01-4A", "J1-01-4B", "J1-01-4C", "J1-01-5A", "J1-01-5B", "J1-01-5C", "J1-02-2A", "J1-02-2B", "J1-02-2C", "J1-02-3A", "J1-02-3B", "J1-02-3C", "J1-02-4A", "J1-02-4B", "J1-02-4C", "J1-02-5A", "J1-02-5B", "J1-02-5C", "J1-03-2A", "J1-03-2B", "J1-03-2C", "J1-03-3A", "J1-03-3B", "J1-03-3C", "J1-03-4A", "J1-03-4B", "J1-03-4C", "J1-03-5A", "J1-03-5B", "J1-03-5C", "J1-04-2A", "J1-04-2B", "J1-04-2C", "J1-04-3A", "J1-04-3B", "J1-04-3C", "J1-04-4A", "J1-04-4B", "J1-04-4C", "J1-04-5A", "J1-04-5B", "J1-04-5C", "J1-05-2A", "J1-05-2B", "J1-05-2C", "J1-05-3A", "J1-05-3B", "J1-05-3C", "J1-05-4A", "J1-05-4B", "J1-05-4C", "J1-05-5A", "J1-05-5B", "J1-05-5C", "J1-06-2A", "J1-06-2B", "J1-06-2C", "J1-06-3A", "J1-06-3B", "J1-06-3C", "J1-06-4A", "J1-06-4B", "J1-06-4C", "J1-06-5A", "J1-06-5B", "J1-06-5C", "J1-07-2A", "J1-07-2B", "J1-07-2C", "J1-07-3A", "J1-07-3B", "J1-07-3C", "J1-07-4A", "J1-07-4B", "J1-07-4C", "J1-07-5A", "J1-07-5B", "J1-07-5C", "J1-08-3A", "J1-08-3B", "J1-08-3C", "J1-08-4A", "J1-08-4B", "J1-08-4C", "J1-08-5A", "J1-08-5B", "J1-08-5C", "J1-09-2A", "J1-09-2B", "J1-09-2C", "J1-09-3A", "J1-09-3B", "J1-09-3C", "J1-09-4A", "J1-09-4B", "J1-09-4C", "J1-09-5A", "J1-09-5B", "J1-09-5C", "J1-10-2A", "J1-10-2B", "J1-10-2C", "J1-10-3A", "J1-10-3B", "J1-10-3C", "J1-10-4A", "J1-10-4B", "J1-10-4C", "J1-10-5A", "J1-10-5B", "J1-10-5C", "J1-11-2A", "J1-11-2B", "J1-11-2C", "J1-11-3A", "J1-11-3B", "J1-11-3C", "J1-11-4A", "J1-11-4B", "J1-11-4C", "J1-11-5A", "J1-11-5B", "J1-11-5C", "J1-12-2A", "J1-12-2B", "J1-12-2C", "J1-12-3A", "J1-12-3B", "J1-12-3C", "J1-12-4A", "J1-12-4B", "J1-12-4C", "J1-12-5A", "J1-12-5B", "J1-12-5C", "J1-13-2A", "J1-13-2B", "J1-13-2C", "J1-13-3A", "J1-13-3B", "J1-13-3C", "J1-13-4A", "J1-13-4B", "J1-13-4C", "J1-13-5A", "J1-13-5B", "J1-13-5C", "J1-14-2A", "J1-14-2B", "J1-14-2C", "J1-14-3A", "J1-14-3B", "J1-14-3C", "J1-14-4A", "J1-14-4B", "J1-14-4C", "J1-14-5A", "J1-14-5B", "J1-14-5C", "J2-01-2A", "J2-01-2B", "J2-01-2C", "J2-01-3A", "J2-01-3B", "J2-01-3C", "J2-01-4A", "J2-01-4B", "J2-01-4C", "J2-01-5A", "J2-01-5B", "J2-01-5C", "J2-02-2A", "J2-02-2B", "J2-02-2C", "J2-02-3A", "J2-02-3B", "J2-02-3C", "J2-02-4A", "J2-02-4B", "J2-02-4C", "J2-02-5A", "J2-02-5B", "J2-02-5C", "J2-03-2A", "J2-03-2B", "J2-03-2C", "J2-03-3A", "J2-03-3B", "J2-03-3C", "J2-03-4A", "J2-03-4B", "J2-03-4C", "J2-03-5A", "J2-03-5B", "J2-03-5C", "J2-04-2A", "J2-04-2B", "J2-04-2C", "J2-04-3A", "J2-04-3B", "J2-04-3C", "J2-04-4A", "J2-04-4B", "J2-04-4C", "J2-04-5A", "J2-04-5B", "J2-04-5C", "J2-05-2A", "J2-05-2B", "J2-05-2C", "J2-05-3A", "J2-05-3B", "J2-05-3C", "J2-05-4A", "J2-05-4B", "J2-05-4C", "J2-05-5A", "J2-05-5B", "J2-05-5C", "J2-06-2A", "J2-06-2B", "J2-06-2C", "J2-06-3A", "J2-06-3B", "J2-06-3C", "J2-06-4A", "J2-06-4B", "J2-06-4C", "J2-06-5A", "J2-06-5B", "J2-06-5C", "J2-07-2A", "J2-07-2B", "J2-07-2C", "J2-07-3A", "J2-07-3B", "J2-07-3C", "J2-07-4A", "J2-07-4B", "J2-07-4C", "J2-07-5A", "J2-07-5B", "J2-07-5C", "J2-08-3A", "J2-08-3B", "J2-08-3C", "J2-08-4A", "J2-08-4B", "J2-08-4C", "J2-08-5A", "J2-08-5B", "J2-08-5C", "J2-09-2A", "J2-09-2B", "J2-09-2C", "J2-09-3A", "J2-09-3B", "J2-09-3C", "J2-09-4A", "J2-09-4B", "J2-09-4C", "J2-09-5A", "J2-09-5B", "J2-09-5C", "J2-10-2A", "J2-10-2B", "J2-10-2C", "J2-10-3A", "J2-10-3B", "J2-10-3C", "J2-10-4A", "J2-10-4B", "J2-10-4C", "J2-10-5A", "J2-10-5B", "J2-10-5C", "J2-11-2A", "J2-11-2B", "J2-11-2C", "J2-11-3A", "J2-11-3B", "J2-11-3C", "J2-11-4A", "J2-11-4B", "J2-11-4C", "J2-11-5A", "J2-11-5B", "J2-11-5C", "J2-12-2A", "J2-12-2B", "J2-12-2C", "J2-12-3A", "J2-12-3B", "J2-12-3C", "J2-12-4A", "J2-12-4B", "J2-12-4C", "J2-12-5A", "J2-12-5B", "J2-12-5C", "J2-13-2A", "J2-13-2B", "J2-13-2C", "J2-13-3A", "J2-13-3B", "J2-13-3C", "J2-13-4A", "J2-13-4B", "J2-13-4C", "J2-13-5A", "J2-13-5B", "J2-13-5C", "J2-14-2A", "J2-14-2B", "J2-14-2C", "J2-14-3A", "J2-14-3B", "J2-14-3C", "J2-14-4A", "J2-14-4B", "J2-14-4C", "J2-14-5A", "J2-14-5B", "J2-14-5C"], "id": "g_J_ALLE_J123"}, {"rayon": "K", "alle": "ALLE K0", "emplacements": ["K1-01-1A", "K1-01-1B", "K1-01-1C", "K1-02-1A", "K1-02-1B", "K1-02-1C", "K1-03-1A", "K1-03-1B", "K1-03-1C", "K1-04-1A", "K1-04-1B", "K1-04-1C", "K1-05-1A", "K1-05-1B", "K1-05-1C", "K1-06-1A", "K1-06-1B", "K1-06-1C", "K1-07-1A", "K1-07-1B", "K1-07-1C", "K1-09-1A", "K1-09-1B", "K1-09-1C", "K1-10-1A", "K1-10-1B", "K1-10-1C", "K1-11-1A", "K1-11-1B", "K1-11-1C", "K1-12-1A", "K1-12-1B", "K1-12-1C", "K1-13-1A", "K1-13-1B", "K1-13-1C", "K1-14-1A", "K1-14-1B", "K1-14-1C", "K2-01-1A", "K2-01-1B", "K2-01-1C", "K2-02-1A", "K2-02-1B", "K2-02-1C", "K2-03-1A", "K2-03-1B", "K2-03-1C", "K2-04-1A", "K2-04-1B", "K2-04-1C", "K2-05-1A", "K2-05-1B", "K2-05-1C", "K2-06-1A", "K2-06-1B", "K2-06-1C", "K2-07-1A", "K2-07-1B", "K2-07-1C", "K2-09-1A", "K2-09-1B", "K2-09-1C", "K2-10-1A", "K2-10-1B", "K2-10-1C", "K2-11-1A", "K2-11-1B", "K2-11-1C", "K2-12-1A", "K2-12-1B", "K2-12-1C", "K2-13-1A", "K2-13-1B", "K2-13-1C", "K2-14-1A", "K2-14-1B", "K2-14-1C"], "id": "g_K_ALLE_K0"}, {"rayon": "K", "alle": "ALLE K123", "emplacements": ["K1-01-2A", "K1-01-2B", "K1-01-2C", "K1-01-3A", "K1-01-3B", "K1-01-3C", "K1-01-4A", "K1-01-4B", "K1-01-4C", "K1-01-5A", "K1-01-5B", "K1-01-5C", "K1-02-2A", "K1-02-2B", "K1-02-2C", "K1-02-3A", "K1-02-3B", "K1-02-3C", "K1-02-4A", "K1-02-4B", "K1-02-4C", "K1-02-5A", "K1-02-5B", "K1-02-5C", "K1-03-2A", "K1-03-2B", "K1-03-2C", "K1-03-3A", "K1-03-3B", "K1-03-3C", "K1-03-4A", "K1-03-4B", "K1-03-4C", "K1-03-5A", "K1-03-5B", "K1-03-5C", "K1-04-2A", "K1-04-2B", "K1-04-2C", "K1-04-3A", "K1-04-3B", "K1-04-3C", "K1-04-4A", "K1-04-4B", "K1-04-4C", "K1-04-5A", "K1-04-5B", "K1-04-5C", "K1-05-2A", "K1-05-2B", "K1-05-2C", "K1-05-3A", "K1-05-3B", "K1-05-3C", "K1-05-4A", "K1-05-4B", "K1-05-4C", "K1-05-5A", "K1-05-5B", "K1-05-5C", "K1-06-2A", "K1-06-2B", "K1-06-2C", "K1-06-3A", "K1-06-3B", "K1-06-3C", "K1-06-4A", "K1-06-4B", "K1-06-4C", "K1-06-5A", "K1-06-5B", "K1-06-5C", "K1-07-2A", "K1-07-2B", "K1-07-2C", "K1-07-3A", "K1-07-3B", "K1-07-3C", "K1-07-4A", "K1-07-4B", "K1-07-4C", "K1-07-5A", "K1-07-5B", "K1-07-5C", "K1-08-3A", "K1-08-3B", "K1-08-3C", "K1-08-4A", "K1-08-4B", "K1-08-4C", "K1-08-5A", "K1-08-5B", "K1-08-5C", "K1-09-2A", "K1-09-2B", "K1-09-2C", "K1-09-3A", "K1-09-3B", "K1-09-3C", "K1-09-4A", "K1-09-4B", "K1-09-4C", "K1-09-5A", "K1-09-5B", "K1-09-5C", "K1-10-2A", "K1-10-2B", "K1-10-2C", "K1-10-3A", "K1-10-3B", "K1-10-3C", "K1-10-4A", "K1-10-4B", "K1-10-4C", "K1-10-5A", "K1-10-5B", "K1-10-5C", "K1-11-2A", "K1-11-2B", "K1-11-2C", "K1-11-3A", "K1-11-3B", "K1-11-3C", "K1-11-4A", "K1-11-4B", "K1-11-4C", "K1-11-5A", "K1-11-5B", "K1-11-5C", "K1-12-2A", "K1-12-2B", "K1-12-2C", "K1-12-3A", "K1-12-3B", "K1-12-3C", "K1-12-4A", "K1-12-4B", "K1-12-4C", "K1-12-5A", "K1-12-5B", "K1-12-5C", "K1-13-2A", "K1-13-2B", "K1-13-2C", "K1-13-3A", "K1-13-3B", "K1-13-3C", "K1-13-4A", "K1-13-4B", "K1-13-4C", "K1-13-5A", "K1-13-5B", "K1-13-5C", "K1-14-2A", "K1-14-2B", "K1-14-2C", "K1-14-3A", "K1-14-3B", "K1-14-3C", "K1-14-4A", "K1-14-4B", "K1-14-4C", "K1-14-5A", "K1-14-5B", "K1-14-5C", "K2-01-2A", "K2-01-2B", "K2-01-2C", "K2-01-3A", "K2-01-3B", "K2-01-3C", "K2-01-4A", "K2-01-4B", "K2-01-4C", "K2-01-5A", "K2-01-5B", "K2-01-5C", "K2-02-2A", "K2-02-2B", "K2-02-2C", "K2-02-3A", "K2-02-3B", "K2-02-3C", "K2-02-4A", "K2-02-4B", "K2-02-4C", "K2-02-5A", "K2-02-5B", "K2-02-5C", "K2-03-2A", "K2-03-2B", "K2-03-2C", "K2-03-3A", "K2-03-3B", "K2-03-3C", "K2-03-4A", "K2-03-4B", "K2-03-4C", "K2-03-5A", "K2-03-5B", "K2-03-5C", "K2-04-2A", "K2-04-2B", "K2-04-2C", "K2-04-3A", "K2-04-3B", "K2-04-3C", "K2-04-4A", "K2-04-4B", "K2-04-4C", "K2-04-5A", "K2-04-5B", "K2-04-5C", "K2-05-2A", "K2-05-2B", "K2-05-2C", "K2-05-3A", "K2-05-3B", "K2-05-3C", "K2-05-4A", "K2-05-4B", "K2-05-4C", "K2-05-5A", "K2-05-5B", "K2-05-5C", "K2-06-2A", "K2-06-2B", "K2-06-2C", "K2-06-3A", "K2-06-3B", "K2-06-3C", "K2-06-4A", "K2-06-4B", "K2-06-4C", "K2-06-5A", "K2-06-5B", "K2-06-5C", "K2-07-2A", "K2-07-2B", "K2-07-2C", "K2-07-3A", "K2-07-3B", "K2-07-3C", "K2-07-4A", "K2-07-4B", "K2-07-4C", "K2-07-5A", "K2-07-5B", "K2-07-5C", "K2-08-3A", "K2-08-3B", "K2-08-3C", "K2-08-4A", "K2-08-4B", "K2-08-4C", "K2-08-5A", "K2-08-5B", "K2-08-5C", "K2-09-2A", "K2-09-2B", "K2-09-2C", "K2-09-3A", "K2-09-3B", "K2-09-3C", "K2-09-4A", "K2-09-4B", "K2-09-4C", "K2-09-5A", "K2-09-5B", "K2-09-5C", "K2-10-2A", "K2-10-2B", "K2-10-2C", "K2-10-3A", "K2-10-3B", "K2-10-3C", "K2-10-4A", "K2-10-4B", "K2-10-4C", "K2-10-5A", "K2-10-5B", "K2-10-5C", "K2-11-2A", "K2-11-2B", "K2-11-2C", "K2-11-3A", "K2-11-3B", "K2-11-3C", "K2-11-4A", "K2-11-4B", "K2-11-4C", "K2-11-5A", "K2-11-5B", "K2-11-5C", "K2-12-2A", "K2-12-2B", "K2-12-2C", "K2-12-3A", "K2-12-3B", "K2-12-3C", "K2-12-4A", "K2-12-4B", "K2-12-4C", "K2-12-5A", "K2-12-5B", "K2-12-5C", "K2-13-2A", "K2-13-2B", "K2-13-2C", "K2-13-3A", "K2-13-3B", "K2-13-3C", "K2-13-4A", "K2-13-4B", "K2-13-4C", "K2-13-5A", "K2-13-5B", "K2-13-5C", "K2-14-2A", "K2-14-2B", "K2-14-2C", "K2-14-3A", "K2-14-3B", "K2-14-3C", "K2-14-4A", "K2-14-4B", "K2-14-4C", "K2-14-5A", "K2-14-5B", "K2-14-5C"], "id": "g_K_ALLE_K123"}, {"rayon": "L", "alle": "ALLE L0", "emplacements": ["L1-01-1A", "L1-01-1B", "L1-01-1C", "L1-02-1A", "L1-02-1B", "L1-02-1C", "L1-03-1A", "L1-03-1B", "L1-03-1C", "L1-04-1A", "L1-04-1B", "L1-04-1C", "L1-05-1A", "L1-05-1B", "L1-05-1C", "L1-06-1A", "L1-06-1B", "L1-06-1C", "L1-07-1A", "L1-07-1B", "L1-07-1C", "L1-09-1A", "L1-09-1B", "L1-09-1C", "L1-10-1A", "L1-10-1B", "L1-10-1C", "L1-11-1A", "L1-11-1B", "L1-11-1C", "L1-12-1A", "L1-12-1B", "L1-12-1C", "L1-13-1A", "L1-13-1B", "L1-13-1C", "L1-14-1A", "L1-14-1B", "L1-14-1C", "L2-01-1A", "L2-01-1B", "L2-01-1C", "L2-02-1A", "L2-02-1B", "L2-02-1C", "L2-03-1A", "L2-03-1B", "L2-03-1C", "L2-04-1A", "L2-04-1B", "L2-04-1C", "L2-05-1A", "L2-05-1B", "L2-05-1C", "L2-06-1A", "L2-06-1B", "L2-06-1C", "L2-07-1A", "L2-07-1B", "L2-07-1C", "L2-09-1A", "L2-09-1B", "L2-09-1C", "L2-10-1A", "L2-10-1B", "L2-10-1C", "L2-11-1A", "L2-11-1B", "L2-11-1C", "L2-12-1A", "L2-12-1B", "L2-12-1C", "L2-13-1A", "L2-13-1B", "L2-13-1C", "L2-14-1A", "L2-14-1B", "L2-14-1C"], "id": "g_L_ALLE_L0"}, {"rayon": "L", "alle": "ALLE L123", "emplacements": ["L1-01-2A", "L1-01-2B", "L1-01-2C", "L1-01-3A", "L1-01-3B", "L1-01-3C", "L1-01-4A", "L1-01-4B", "L1-01-4C", "L1-01-5A", "L1-01-5B", "L1-01-5C", "L1-02-2A", "L1-02-2B", "L1-02-2C", "L1-02-3A", "L1-02-3B", "L1-02-3C", "L1-02-4A", "L1-02-4B", "L1-02-4C", "L1-02-5A", "L1-02-5B", "L1-02-5C", "L1-03-2A", "L1-03-2B", "L1-03-2C", "L1-03-3A", "L1-03-3B", "L1-03-3C", "L1-03-4A", "L1-03-4B", "L1-03-4C", "L1-03-5A", "L1-03-5B", "L1-03-5C", "L1-04-2A", "L1-04-2B", "L1-04-2C", "L1-04-3A", "L1-04-3B", "L1-04-3C", "L1-04-4A", "L1-04-4B", "L1-04-4C", "L1-04-5A", "L1-04-5B", "L1-04-5C", "L1-05-2A", "L1-05-2B", "L1-05-2C", "L1-05-3A", "L1-05-3B", "L1-05-3C", "L1-05-4A", "L1-05-4B", "L1-05-4C", "L1-05-5A", "L1-05-5B", "L1-05-5C", "L1-06-2A", "L1-06-2B", "L1-06-2C", "L1-06-3A", "L1-06-3B", "L1-06-3C", "L1-06-4A", "L1-06-4B", "L1-06-4C", "L1-06-5A", "L1-06-5B", "L1-06-5C", "L1-07-2A", "L1-07-2B", "L1-07-2C", "L1-07-3A", "L1-07-3B", "L1-07-3C", "L1-07-4A", "L1-07-4B", "L1-07-4C", "L1-07-5A", "L1-07-5B", "L1-07-5C", "L1-08-3A", "L1-08-3B", "L1-08-3C", "L1-08-4A", "L1-08-4B", "L1-08-4C", "L1-08-5A", "L1-08-5B", "L1-08-5C", "L1-09-2A", "L1-09-2B", "L1-09-2C", "L1-09-3A", "L1-09-3B", "L1-09-3C", "L1-09-4A", "L1-09-4B", "L1-09-4C", "L1-09-5A", "L1-09-5B", "L1-09-5C", "L1-10-2A", "L1-10-2B", "L1-10-2C", "L1-10-3A", "L1-10-3B", "L1-10-3C", "L1-10-4A", "L1-10-4B", "L1-10-4C", "L1-10-5A", "L1-10-5B", "L1-10-5C", "L1-11-2A", "L1-11-2B", "L1-11-2C", "L1-11-3A", "L1-11-3B", "L1-11-3C", "L1-11-4A", "L1-11-4B", "L1-11-4C", "L1-11-5A", "L1-11-5B", "L1-11-5C", "L1-12-2A", "L1-12-2B", "L1-12-2C", "L1-12-3A", "L1-12-3B", "L1-12-3C", "L1-12-4A", "L1-12-4B", "L1-12-4C", "L1-12-5A", "L1-12-5B", "L1-12-5C", "L1-13-2A", "L1-13-2B", "L1-13-2C", "L1-13-3A", "L1-13-3B", "L1-13-3C", "L1-13-4A", "L1-13-4B", "L1-13-4C", "L1-13-5A", "L1-13-5B", "L1-13-5C", "L1-14-2A", "L1-14-2B", "L1-14-2C", "L1-14-3A", "L1-14-3B", "L1-14-3C", "L1-14-4A", "L1-14-4B", "L1-14-4C", "L1-14-5A", "L1-14-5B", "L1-14-5C", "L2-01-2A", "L2-01-2B", "L2-01-2C", "L2-01-3A", "L2-01-3B", "L2-01-3C", "L2-01-4A", "L2-01-4B", "L2-01-4C", "L2-01-5A", "L2-01-5B", "L2-01-5C", "L2-02-2A", "L2-02-2B", "L2-02-2C", "L2-02-3A", "L2-02-3B", "L2-02-3C", "L2-02-4A", "L2-02-4B", "L2-02-4C", "L2-02-5A", "L2-02-5B", "L2-02-5C", "L2-03-2A", "L2-03-2B", "L2-03-2C", "L2-03-3A", "L2-03-3B", "L2-03-3C", "L2-03-4A", "L2-03-4B", "L2-03-4C", "L2-03-5A", "L2-03-5B", "L2-03-5C", "L2-04-2A", "L2-04-2B", "L2-04-2C", "L2-04-3A", "L2-04-3B", "L2-04-3C", "L2-04-4A", "L2-04-4B", "L2-04-4C", "L2-04-5A", "L2-04-5B", "L2-04-5C", "L2-05-2A", "L2-05-2B", "L2-05-2C", "L2-05-3A", "L2-05-3B", "L2-05-3C", "L2-05-4A", "L2-05-4B", "L2-05-4C", "L2-05-5A", "L2-05-5B", "L2-05-5C", "L2-06-2A", "L2-06-2B", "L2-06-2C", "L2-06-3A", "L2-06-3B", "L2-06-3C", "L2-06-4A", "L2-06-4B", "L2-06-4C", "L2-06-5A", "L2-06-5B", "L2-06-5C", "L2-07-2A", "L2-07-2B", "L2-07-2C", "L2-07-3A", "L2-07-3B", "L2-07-3C", "L2-07-4A", "L2-07-4B", "L2-07-4C", "L2-07-5A", "L2-07-5B", "L2-07-5C", "L2-08-3A", "L2-08-3B", "L2-08-3C", "L2-08-4A", "L2-08-4B", "L2-08-4C", "L2-08-5A", "L2-08-5B", "L2-08-5C", "L2-09-2A", "L2-09-2B", "L2-09-2C", "L2-09-3A", "L2-09-3B", "L2-09-3C", "L2-09-4A", "L2-09-4B", "L2-09-4C", "L2-09-5A", "L2-09-5B", "L2-09-5C", "L2-10-2A", "L2-10-2B", "L2-10-2C", "L2-10-3A", "L2-10-3B", "L2-10-3C", "L2-10-4A", "L2-10-4B", "L2-10-4C", "L2-10-5A", "L2-10-5B", "L2-10-5C", "L2-11-2A", "L2-11-2B", "L2-11-2C", "L2-11-3A", "L2-11-3B", "L2-11-3C", "L2-11-4A", "L2-11-4B", "L2-11-4C", "L2-11-5A", "L2-11-5B", "L2-11-5C", "L2-12-2A", "L2-12-2B", "L2-12-2C", "L2-12-3A", "L2-12-3B", "L2-12-3C", "L2-12-4A", "L2-12-4B", "L2-12-4C", "L2-12-5A", "L2-12-5B", "L2-12-5C", "L2-13-2A", "L2-13-2B", "L2-13-2C", "L2-13-3A", "L2-13-3B", "L2-13-3C", "L2-13-4A", "L2-13-4B", "L2-13-4C", "L2-13-5A", "L2-13-5B", "L2-13-5C", "L2-14-2A", "L2-14-2B", "L2-14-2C", "L2-14-3A", "L2-14-3B", "L2-14-3C", "L2-14-4A", "L2-14-4B", "L2-14-4C", "L2-14-5A", "L2-14-5B", "L2-14-5C"], "id": "g_L_ALLE_L123"}, {"rayon": "M", "alle": "ALLE M0", "emplacements": ["M1-01-1A", "M1-01-1B", "M1-01-1C", "M1-02-1A", "M1-02-1B", "M1-02-1C", "M1-03-1A", "M1-03-1B", "M1-03-1C", "M1-04-1A", "M1-04-1B", "M1-04-1C", "M1-05-1A", "M1-05-1B", "M1-05-1C", "M1-06-1A", "M1-06-1B", "M1-06-1C", "M1-07-1A", "M1-07-1B", "M1-07-1C", "M1-08-1A", "M1-08-1B", "M1-08-1C", "M1-09-1A", "M1-09-1B", "M1-09-1C", "M1-10-1A", "M1-10-1B", "M1-10-1C", "M1-11-1A", "M1-11-1B", "M1-11-1C", "M1-12-1A", "M1-12-1B", "M1-12-1C", "M1-13-1A", "M1-13-1B", "M1-13-1C", "M1-14-1A", "M1-14-1B", "M1-14-1C", "M2-01-1A", "M2-01-1B", "M2-01-1C", "M2-02-1A", "M2-02-1B", "M2-02-1C", "M2-03-1A", "M2-03-1B", "M2-03-1C", "M2-04-1A", "M2-04-1B", "M2-04-1C", "M2-05-1A", "M2-05-1B", "M2-05-1C", "M2-06-1A", "M2-06-1B", "M2-06-1C", "M2-07-1A", "M2-07-1B", "M2-07-1C", "M2-09-1A", "M2-09-1B", "M2-09-1C", "M2-10-1A", "M2-10-1B", "M2-10-1C", "M2-11-1A", "M2-11-1B", "M2-11-1C", "M2-12-1A", "M2-12-1B", "M2-12-1C", "M2-13-1A", "M2-13-1B", "M2-13-1C", "M2-14-1A", "M2-14-1B", "M2-14-1C"], "id": "g_M_ALLE_M0"}, {"rayon": "M", "alle": "ALLE M123", "emplacements": ["M1-01-2A", "M1-01-2B", "M1-01-2C", "M1-01-3A", "M1-01-3B", "M1-01-3C", "M1-01-4A", "M1-01-4B", "M1-01-4C", "M1-01-5A", "M1-01-5B", "M1-01-5C", "M1-02-2A", "M1-02-2B", "M1-02-2C", "M1-02-3A", "M1-02-3B", "M1-02-3C", "M1-02-4A", "M1-02-4B", "M1-02-4C", "M1-02-5A", "M1-02-5B", "M1-02-5C", "M1-03-2A", "M1-03-2B", "M1-03-2C", "M1-03-3A", "M1-03-3B", "M1-03-3C", "M1-03-4A", "M1-03-4B", "M1-03-4C", "M1-03-5A", "M1-03-5B", "M1-03-5C", "M1-04-2A", "M1-04-2B", "M1-04-2C", "M1-04-3A", "M1-04-3B", "M1-04-3C", "M1-04-4A", "M1-04-4B", "M1-04-4C", "M1-04-5A", "M1-04-5B", "M1-04-5C", "M1-05-2A", "M1-05-2B", "M1-05-2C", "M1-05-3A", "M1-05-3B", "M1-05-3C", "M1-05-4A", "M1-05-4B", "M1-05-4C", "M1-05-5A", "M1-05-5B", "M1-05-5C", "M1-06-2A", "M1-06-2B", "M1-06-2C", "M1-06-3A", "M1-06-3B", "M1-06-3C", "M1-06-4A", "M1-06-4B", "M1-06-4C", "M1-06-5A", "M1-06-5B", "M1-06-5C", "M1-07-2A", "M1-07-2B", "M1-07-2C", "M1-07-3A", "M1-07-3B", "M1-07-3C", "M1-07-4A", "M1-07-4B", "M1-07-4C", "M1-07-5A", "M1-07-5B", "M1-07-5C", "M1-08-2A", "M1-08-2B", "M1-08-2C", "M1-08-3A", "M1-08-3B", "M1-08-3C", "M1-08-4A", "M1-08-4B", "M1-08-4C", "M1-08-5A", "M1-08-5B", "M1-08-5C", "M1-09-2A", "M1-09-2B", "M1-09-2C", "M1-09-3A", "M1-09-3B", "M1-09-3C", "M1-09-4A", "M1-09-4B", "M1-09-4C", "M1-09-5A", "M1-09-5B", "M1-09-5C", "M1-10-2A", "M1-10-2B", "M1-10-2C", "M1-10-3A", "M1-10-3B", "M1-10-3C", "M1-10-4A", "M1-10-4B", "M1-10-4C", "M1-10-5A", "M1-10-5B", "M1-10-5C", "M1-11-2A", "M1-11-2B", "M1-11-2C", "M1-11-3A", "M1-11-3B", "M1-11-3C", "M1-11-4A", "M1-11-4B", "M1-11-4C", "M1-11-5A", "M1-11-5B", "M1-11-5C", "M1-12-2A", "M1-12-2B", "M1-12-2C", "M1-12-3A", "M1-12-3B", "M1-12-3C", "M1-12-4A", "M1-12-4B", "M1-12-4C", "M1-12-5A", "M1-12-5B", "M1-12-5C", "M1-13-2A", "M1-13-2B", "M1-13-2C", "M1-13-3A", "M1-13-3B", "M1-13-3C", "M1-13-4A", "M1-13-4B", "M1-13-4C", "M1-13-5A", "M1-13-5B", "M1-13-5C", "M1-14-2A", "M1-14-2B", "M1-14-2C", "M1-14-3A", "M1-14-3B", "M1-14-3C", "M1-14-4A", "M1-14-4B", "M1-14-4C", "M1-14-5A", "M1-14-5B", "M1-14-5C", "M2-01-2A", "M2-01-2B", "M2-01-2C", "M2-01-3A", "M2-01-3B", "M2-01-3C", "M2-01-4A", "M2-01-4B", "M2-01-4C", "M2-01-5A", "M2-01-5B", "M2-01-5C", "M2-02-2A", "M2-02-2B", "M2-02-2C", "M2-02-3A", "M2-02-3B", "M2-02-3C", "M2-02-4A", "M2-02-4B", "M2-02-4C", "M2-02-5A", "M2-02-5B", "M2-02-5C", "M2-03-2A", "M2-03-2B", "M2-03-2C", "M2-03-3A", "M2-03-3B", "M2-03-3C", "M2-03-4A", "M2-03-4B", "M2-03-4C", "M2-03-5A", "M2-03-5B", "M2-03-5C", "M2-04-2A", "M2-04-2B", "M2-04-2C", "M2-04-3A", "M2-04-3B", "M2-04-3C", "M2-04-4A", "M2-04-4B", "M2-04-4C", "M2-04-5A", "M2-04-5B", "M2-04-5C", "M2-05-2A", "M2-05-2B", "M2-05-2C", "M2-05-3A", "M2-05-3B", "M2-05-3C", "M2-05-4A", "M2-05-4B", "M2-05-4C", "M2-05-5A", "M2-05-5B", "M2-05-5C", "M2-06-2A", "M2-06-2B", "M2-06-2C", "M2-06-3A", "M2-06-3B", "M2-06-3C", "M2-06-4A", "M2-06-4B", "M2-06-4C", "M2-06-5A", "M2-06-5B", "M2-06-5C", "M2-07-2A", "M2-07-2B", "M2-07-2C", "M2-07-3A", "M2-07-3B", "M2-07-3C", "M2-07-4A", "M2-07-4B", "M2-07-4C", "M2-07-5A", "M2-07-5B", "M2-07-5C", "M2-08-3A", "M2-08-3B", "M2-08-3C", "M2-08-4A", "M2-08-4B", "M2-08-4C", "M2-08-5A", "M2-08-5B", "M2-08-5C", "M2-09-2A", "M2-09-2B", "M2-09-2C", "M2-09-3A", "M2-09-3B", "M2-09-3C", "M2-09-4A", "M2-09-4B", "M2-09-4C", "M2-09-5A", "M2-09-5B", "M2-09-5C", "M2-10-2A", "M2-10-2B", "M2-10-2C", "M2-10-3A", "M2-10-3B", "M2-10-3C", "M2-10-4A", "M2-10-4B", "M2-10-4C", "M2-10-5A", "M2-10-5B", "M2-10-5C", "M2-11-2A", "M2-11-2B", "M2-11-2C", "M2-11-3A", "M2-11-3B", "M2-11-3C", "M2-11-4A", "M2-11-4B", "M2-11-4C", "M2-11-5A", "M2-11-5B", "M2-11-5C", "M2-12-2A", "M2-12-2B", "M2-12-2C", "M2-12-3A", "M2-12-3B", "M2-12-3C", "M2-12-4A", "M2-12-4B", "M2-12-4C", "M2-12-5A", "M2-12-5B", "M2-12-5C", "M2-13-2A", "M2-13-2B", "M2-13-2C", "M2-13-3A", "M2-13-3B", "M2-13-3C", "M2-13-4A", "M2-13-4B", "M2-13-4C", "M2-13-5A", "M2-13-5B", "M2-13-5C", "M2-14-2A", "M2-14-2B", "M2-14-2C", "M2-14-3A", "M2-14-3B", "M2-14-3C", "M2-14-4A", "M2-14-4B", "M2-14-4C", "M2-14-5A", "M2-14-5B", "M2-14-5C"], "id": "g_M_ALLE_M123"}, {"rayon": "N", "alle": "ALLE N0", "emplacements": ["N1-01-1A", "N1-01-1B", "N1-01-1C", "N1-02-1A", "N1-02-1B", "N1-02-1C", "N1-03-1A", "N1-03-1B", "N1-03-1C", "N1-04-1A", "N1-04-1B", "N1-04-1C", "N1-05-1A", "N1-05-1B", "N1-05-1C", "N1-06-1A", "N1-06-1B", "N1-06-1C", "N1-07-1A", "N1-07-1B", "N1-07-1C", "N1-08-1A", "N1-08-1B", "N1-08-1C", "N1-09-1A", "N1-09-1B", "N1-09-1C", "N1-10-1A", "N1-10-1B", "N1-10-1C", "N1-11-1A", "N1-11-1B", "N1-11-1C", "N1-12-1A", "N1-12-1B", "N1-12-1C", "N1-13-1A", "N1-13-1B", "N1-13-1C", "N1-14-1A", "N1-14-1B", "N1-14-1C", "N1-15-1A", "N1-15-1B", "N1-15-1C", "N1-17-1A", "N1-17-1B", "N1-17-1C", "N1-18-1A", "N1-18-1B", "N1-18-1C", "N1-19-1A", "N1-19-1B", "N1-19-1C", "N1-20-1A", "N1-20-1B", "N1-20-1C", "N1-21-1A", "N1-21-1B", "N1-21-1C", "N1-22-1A", "N1-22-1B", "N1-22-1C", "N2-01-1A", "N2-01-1B", "N2-01-1C", "N2-02-1A", "N2-02-1B", "N2-02-1C", "N2-03-1A", "N2-03-1B", "N2-03-1C", "N2-04-1A", "N2-04-1B", "N2-04-1C", "N2-05-1A", "N2-05-1B", "N2-05-1C", "N2-06-1A", "N2-06-1B", "N2-06-1C", "N2-07-1A", "N2-07-1B", "N2-07-1C", "N2-08-1A", "N2-08-1B", "N2-08-1C", "N2-09-1A", "N2-09-1B", "N2-09-1C", "N2-10-1A", "N2-10-1B", "N2-10-1C", "N2-11-1A", "N2-11-1B", "N2-11-1C"], "id": "g_N_ALLE_N0"}, {"rayon": "N", "alle": "ALLE N123", "emplacements": ["N1-01-2A", "N1-01-2B", "N1-01-2C", "N1-01-3A", "N1-01-3B", "N1-01-3C", "N1-01-4A", "N1-01-4B", "N1-01-4C", "N1-01-5A", "N1-01-5B", "N1-01-5C", "N1-01-6A", "N1-01-6B", "N1-01-6C", "N1-02-2A", "N1-02-2B", "N1-02-2C", "N1-02-3A", "N1-02-3B", "N1-02-3C", "N1-02-4A", "N1-02-4B", "N1-02-4C", "N1-02-5A", "N1-02-5B", "N1-02-5C", "N1-02-6A", "N1-02-6B", "N1-02-6C", "N1-03-2A", "N1-03-2B", "N1-03-2C", "N1-03-3A", "N1-03-3B", "N1-03-3C", "N1-03-4A", "N1-03-4B", "N1-03-4C", "N1-03-5A", "N1-03-5B", "N1-03-5C", "N1-03-6A", "N1-03-6B", "N1-03-6C", "N1-04-2A", "N1-04-2B", "N1-04-2C", "N1-04-3A", "N1-04-3B", "N1-04-3C", "N1-04-4A", "N1-04-4B", "N1-04-4C", "N1-04-5A", "N1-04-5B", "N1-04-5C", "N1-04-6A", "N1-04-6B", "N1-04-6C", "N1-05-2A", "N1-05-2B", "N1-05-2C", "N1-05-3A", "N1-05-3B", "N1-05-3C", "N1-05-4A", "N1-05-4B", "N1-05-4C", "N1-05-5A", "N1-05-5B", "N1-05-5C", "N1-05-6A", "N1-05-6B", "N1-05-6C", "N1-06-2A", "N1-06-2B", "N1-06-2C", "N1-06-3A", "N1-06-3B", "N1-06-3C", "N1-06-4A", "N1-06-4B", "N1-06-4C", "N1-06-5A", "N1-06-5B", "N1-06-5C", "N1-06-6A", "N1-06-6B", "N1-06-6C", "N1-07-2A", "N1-07-2B", "N1-07-2C", "N1-07-3A", "N1-07-3B", "N1-07-3C", "N1-07-4A", "N1-07-4B", "N1-07-4C", "N1-07-5A", "N1-07-5B", "N1-07-5C", "N1-07-6A", "N1-07-6B", "N1-07-6C", "N1-08-2A", "N1-08-2B", "N1-08-2C", "N1-08-3A", "N1-08-3B", "N1-08-3C", "N1-08-4A", "N1-08-4B", "N1-08-4C", "N1-08-5A", "N1-08-5B", "N1-08-5C", "N1-08-6A", "N1-08-6B", "N1-08-6C", "N1-09-2A", "N1-09-2B", "N1-09-2C", "N1-09-3A", "N1-09-3B", "N1-09-3C", "N1-09-4A", "N1-09-4B", "N1-09-4C", "N1-09-5A", "N1-09-5B", "N1-09-5C", "N1-10-2A", "N1-10-2B", "N1-10-2C", "N1-10-3A", "N1-10-3B", "N1-10-3C", "N1-10-4A", "N1-10-4B", "N1-10-4C", "N1-10-5A", "N1-10-5B", "N1-10-5C", "N1-11-2A", "N1-11-2B", "N1-11-2C", "N1-11-3A", "N1-11-3B", "N1-11-3C", "N1-11-4A", "N1-11-4B", "N1-11-4C", "N1-11-5A", "N1-11-5B", "N1-11-5C", "N1-12-2A", "N1-12-2B", "N1-12-2C", "N1-12-3A", "N1-12-3B", "N1-12-3C", "N1-12-4A", "N1-12-4B", "N1-12-4C", "N1-12-5A", "N1-12-5B", "N1-12-5C", "N1-13-2A", "N1-13-2B", "N1-13-2C", "N1-13-3A", "N1-13-3B", "N1-13-3C", "N1-13-4A", "N1-13-4B", "N1-13-4C", "N1-13-5A", "N1-13-5B", "N1-13-5C", "N1-14-2A", "N1-14-2B", "N1-14-2C", "N1-14-3A", "N1-14-3B", "N1-14-3C", "N1-14-4A", "N1-14-4B", "N1-14-4C", "N1-14-5A", "N1-14-5B", "N1-14-5C", "N1-15-2A", "N1-15-2B", "N1-15-2C", "N1-15-3A", "N1-15-3B", "N1-15-3C", "N1-15-4A", "N1-15-4B", "N1-15-4C", "N1-15-5A", "N1-15-5B", "N1-15-5C", "N1-16-3A", "N1-16-3B", "N1-16-3C", "N1-16-4A", "N1-16-4B", "N1-16-4C", "N1-16-5A", "N1-16-5B", "N1-16-5C", "N1-17-2A", "N1-17-2B", "N1-17-2C", "N1-17-3A", "N1-17-3B", "N1-17-3C", "N1-17-4A", "N1-17-4B", "N1-17-4C", "N1-17-5A", "N1-17-5B", "N1-17-5C", "N1-18-2A", "N1-18-2B", "N1-18-2C", "N1-18-3A", "N1-18-3B", "N1-18-3C", "N1-18-4A", "N1-18-4B", "N1-18-4C", "N1-18-5A", "N1-18-5B", "N1-18-5C", "N1-19-2A", "N1-19-2B", "N1-19-2C", "N1-19-3A", "N1-19-3B", "N1-19-3C", "N1-19-4A", "N1-19-4B", "N1-19-4C", "N1-19-5A", "N1-19-5B", "N1-19-5C", "N1-20-2A", "N1-20-2B", "N1-20-2C", "N1-20-3A", "N1-20-3B", "N1-20-3C", "N1-20-4A", "N1-20-4B", "N1-20-4C", "N1-20-5A", "N1-20-5B", "N1-20-5C", "N1-21-2A", "N1-21-2B", "N1-21-2C", "N1-21-3A", "N1-21-3B", "N1-21-3C", "N1-21-4A", "N1-21-4B", "N1-21-4C", "N1-21-5A", "N1-21-5B", "N1-21-5C", "N1-22-2A", "N1-22-2B", "N1-22-2C", "N1-22-3A", "N1-22-3B", "N1-22-3C", "N1-22-4A", "N1-22-4B", "N1-22-4C", "N1-22-5A", "N1-22-5B", "N1-22-5C", "N2-01-2A", "N2-01-2B", "N2-01-2C", "N2-01-3A", "N2-01-3B", "N2-01-3C", "N2-01-4A", "N2-01-4B", "N2-01-4C", "N2-01-5A", "N2-01-5B", "N2-01-5C", "N2-02-2A", "N2-02-2B", "N2-02-2C", "N2-02-3A", "N2-02-3B", "N2-02-3C", "N2-02-4A", "N2-02-4B", "N2-02-4C", "N2-02-5A", "N2-02-5B", "N2-02-5C", "N2-03-2A", "N2-03-2B", "N2-03-2C", "N2-03-3A", "N2-03-3B", "N2-03-3C", "N2-03-4A", "N2-03-4B", "N2-03-4C", "N2-03-5A", "N2-03-5B", "N2-03-5C", "N2-04-2A", "N2-04-2B", "N2-04-2C", "N2-04-3A", "N2-04-3B", "N2-04-3C", "N2-04-4A", "N2-04-4B", "N2-04-4C", "N2-04-5A", "N2-04-5B", "N2-04-5C", "N2-05-2A", "N2-05-2B", "N2-05-2C", "N2-05-3A", "N2-05-3B", "N2-05-3C", "N2-05-4A", "N2-05-4B", "N2-05-4C", "N2-05-5A", "N2-05-5B", "N2-05-5C", "N2-06-2A", "N2-06-2B", "N2-06-2C", "N2-06-3A", "N2-06-3B", "N2-06-3C", "N2-06-4A", "N2-06-4B", "N2-06-4C", "N2-06-5A", "N2-06-5B", "N2-06-5C", "N2-07-2A", "N2-07-2B", "N2-07-2C", "N2-07-3A", "N2-07-3B", "N2-07-3C", "N2-07-4A", "N2-07-4B", "N2-07-4C", "N2-07-5A", "N2-07-5B", "N2-07-5C", "N2-08-2A", "N2-08-2B", "N2-08-2C", "N2-08-3A", "N2-08-3B", "N2-08-3C", "N2-08-4A", "N2-08-4B", "N2-08-4C", "N2-08-5A", "N2-08-5B", "N2-08-5C", "N2-09-2A", "N2-09-2B", "N2-09-2C", "N2-09-3A", "N2-09-3B", "N2-09-3C", "N2-09-4A", "N2-09-4B", "N2-09-4C", "N2-09-5A", "N2-09-5B", "N2-09-5C", "N2-10-2A", "N2-10-2B", "N2-10-2C", "N2-10-3A", "N2-10-3B", "N2-10-3C", "N2-10-4A", "N2-10-4B", "N2-10-4C", "N2-10-5A", "N2-10-5B", "N2-10-5C", "N2-11-2A", "N2-11-2B", "N2-11-2C", "N2-11-3A", "N2-11-3B", "N2-11-3C", "N2-11-4A", "N2-11-4B", "N2-11-4C", "N2-11-5A", "N2-11-5B", "N2-11-5C", "N2-12-3A", "N2-12-3B", "N2-12-3C", "N2-12-4A", "N2-12-4B", "N2-12-4C", "N2-12-5A", "N2-12-5B", "N2-12-5C", "N2-13-2A", "N2-13-2B", "N2-13-2C", "N2-13-3A", "N2-13-3B", "N2-13-3C", "N2-13-4A", "N2-13-4B", "N2-13-4C", "N2-13-5A", "N2-13-5B", "N2-13-5C", "N2-14-2A", "N2-14-2B", "N2-14-2C", "N2-14-3A", "N2-14-3B", "N2-14-3C", "N2-14-4A", "N2-14-4B", "N2-14-4C", "N2-14-5A", "N2-14-5B", "N2-14-5C", "N2-15-2A", "N2-15-2B", "N2-15-2C", "N2-15-3A", "N2-15-3B", "N2-15-3C", "N2-15-4A", "N2-15-4B", "N2-15-4C", "N2-15-5A", "N2-15-5B", "N2-15-5C", "N2-16-2A", "N2-16-2B", "N2-16-2C", "N2-16-3A", "N2-16-3B", "N2-16-3C", "N2-16-4A", "N2-16-4B", "N2-16-4C", "N2-16-5A", "N2-16-5B", "N2-16-5C", "N2-17-2A", "N2-17-2B", "N2-17-2C", "N2-17-3A", "N2-17-3B", "N2-17-3C", "N2-17-4A", "N2-17-4B", "N2-17-4C", "N2-17-5A", "N2-17-5B", "N2-17-5C", "N2-18-2A", "N2-18-2B", "N2-18-2C", "N2-18-3A", "N2-18-3B", "N2-18-3C", "N2-18-4A", "N2-18-4B", "N2-18-4C", "N2-18-5A", "N2-18-5B", "N2-18-5C", "N2-19-2A", "N2-19-2B", "N2-19-2C", "N2-19-3A", "N2-19-3B", "N2-19-3C", "N2-19-4A", "N2-19-4B", "N2-19-4C", "N2-19-5A", "N2-19-5B", "N2-19-5C", "N2-20-3A", "N2-20-3B", "N2-20-3C", "N2-20-4A", "N2-20-4B", "N2-20-4C", "N2-20-5A", "N2-20-5B", "N2-20-5C", "N2-21-2A", "N2-21-2B", "N2-21-2C", "N2-21-3A", "N2-21-3B", "N2-21-3C", "N2-21-4A", "N2-21-4B", "N2-21-4C", "N2-21-5A", "N2-21-5B", "N2-21-5C", "N2-22-2A", "N2-22-2B", "N2-22-2C", "N2-22-3A", "N2-22-3B", "N2-22-3C", "N2-22-4A", "N2-22-4B", "N2-22-4C", "N2-22-5A", "N2-22-5B", "N2-22-5C", "N2-23-2A", "N2-23-2B", "N2-23-2C", "N2-23-3A", "N2-23-3B", "N2-23-3C", "N2-23-4A", "N2-23-4B", "N2-23-4C", "N2-23-5A", "N2-23-5B", "N2-23-5C", "N2-24-2A", "N2-24-2B", "N2-24-2C", "N2-24-3A", "N2-24-3B", "N2-24-3C", "N2-24-4A", "N2-24-4B", "N2-24-4C", "N2-24-5A", "N2-24-5B", "N2-24-5C", "N2-25-2A", "N2-25-2B", "N2-25-2C", "N2-25-3A", "N2-25-3B", "N2-25-3C", "N2-25-4A", "N2-25-4B", "N2-25-4C", "N2-25-5A", "N2-25-5B", "N2-25-5C", "N2-26-2A", "N2-26-2B", "N2-26-2C", "N2-26-3A", "N2-26-3B", "N2-26-3C", "N2-26-4A", "N2-26-4B", "N2-26-4C", "N2-26-5A", "N2-26-5B", "N2-26-5C"], "id": "g_N_ALLE_N123"}, {"rayon": "O", "alle": "ALLE O0", "emplacements": ["O1-01-1A", "O1-01-1B", "O1-01-1C", "O1-02-1A", "O1-02-1B", "O1-02-1C", "O1-03-1A", "O1-03-1B", "O1-03-1C", "O1-04-1A", "O1-04-1B", "O1-04-1C", "O1-05-1A", "O1-05-1B", "O1-05-1C", "O1-06-1A", "O1-06-1B", "O1-06-1C", "O1-07-1A", "O1-07-1B", "O1-07-1C", "O1-08-1A", "O1-08-1B", "O1-08-1C", "O1-09-1A", "O1-09-1B", "O1-09-1C", "O1-10-1A", "O1-10-1B", "O1-10-1C", "O1-11-1A", "O1-11-1B", "O1-11-1C", "O1-13-1A", "O1-13-1B", "O1-13-1C", "O2-01-1A", "O2-01-1B", "O2-01-1C", "O2-02-1A", "O2-02-1B", "O2-02-1C", "O2-03-1A", "O2-03-1B", "O2-03-1C", "O2-04-1A", "O2-04-1B", "O2-04-1C", "O2-05-1A", "O2-05-1B", "O2-05-1C", "O2-06-1A", "O2-06-1B", "O2-06-1C", "O2-07-1A", "O2-07-1B", "O2-07-1C", "O2-08-1A", "O2-08-1B", "O2-08-1C", "O2-09-1A", "O2-09-1B", "O2-09-1C", "O2-10-1A", "O2-10-1B", "O2-10-1C", "O2-12-1A", "O2-12-1B", "O2-12-1C", "O2-13-1A", "O2-13-1B", "O2-13-1C", "O2-14-1A", "O2-14-1B", "O2-14-1C", "O2-15-1A", "O2-15-1B", "O2-15-1C", "O2-16-1A", "O2-16-1B", "O2-16-1C", "O2-17-1A", "O2-17-1B", "O2-17-1C", "O2-18-1A", "O2-18-1B", "O2-18-1C", "O2-20-1A", "O2-20-1B", "O2-20-1C", "O2-21-1A", "O2-21-1B", "O2-21-1C", "O2-22-1A", "O2-22-1B", "O2-22-1C", "O2-23-1A", "O2-23-1B", "O2-23-1C", "O2-25-1A", "O2-25-1B", "O2-25-1C"], "id": "g_O_ALLE_O0"}, {"rayon": "O", "alle": "ALLE O123", "emplacements": ["O1-01-2A", "O1-01-2B", "O1-01-2C", "O1-01-3A", "O1-01-3B", "O1-01-3C", "O1-01-4A", "O1-01-4B", "O1-01-4C", "O1-01-5A", "O1-01-5B", "O1-01-5C", "O1-02-2A", "O1-02-2B", "O1-02-2C", "O1-02-3A", "O1-02-3B", "O1-02-3C", "O1-02-4A", "O1-02-4B", "O1-02-4C", "O1-02-5A", "O1-02-5B", "O1-02-5C", "O1-03-2A", "O1-03-2B", "O1-03-2C", "O1-03-3A", "O1-03-3B", "O1-03-3C", "O1-03-4A", "O1-03-4B", "O1-03-4C", "O1-03-5A", "O1-03-5B", "O1-03-5C", "O1-04-2A", "O1-04-2B", "O1-04-2C", "O1-04-3A", "O1-04-3B", "O1-04-3C", "O1-04-4A", "O1-04-4B", "O1-04-4C", "O1-04-5A", "O1-04-5B", "O1-04-5C", "O1-05-2A", "O1-05-2B", "O1-05-2C", "O1-05-3A", "O1-05-3B", "O1-05-3C", "O1-05-4A", "O1-05-4B", "O1-05-4C", "O1-05-5A", "O1-05-5B", "O1-05-5C", "O1-06-2A", "O1-06-2B", "O1-06-2C", "O1-06-3A", "O1-06-3B", "O1-06-3C", "O1-06-4A", "O1-06-4B", "O1-06-4C", "O1-06-5A", "O1-06-5B", "O1-06-5C", "O1-07-2A", "O1-07-2B", "O1-07-2C", "O1-07-3A", "O1-07-3B", "O1-07-3C", "O1-07-4A", "O1-07-4B", "O1-07-4C", "O1-07-5A", "O1-07-5B", "O1-07-5C", "O1-08-2A", "O1-08-2B", "O1-08-2C", "O1-08-3A", "O1-08-3B", "O1-08-3C", "O1-08-4A", "O1-08-4B", "O1-08-4C", "O1-08-5A", "O1-08-5B", "O1-08-5C", "O1-09-2A", "O1-09-2B", "O1-09-2C", "O1-09-3A", "O1-09-3B", "O1-09-3C", "O1-09-4A", "O1-09-4B", "O1-09-4C", "O1-09-5A", "O1-09-5B", "O1-09-5C", "O1-10-2A", "O1-10-2B", "O1-10-2C", "O1-10-3A", "O1-10-3B", "O1-10-3C", "O1-10-4A", "O1-10-4B", "O1-10-4C", "O1-10-5A", "O1-10-5B", "O1-10-5C", "O1-11-2A", "O1-11-2B", "O1-11-2C", "O1-11-3A", "O1-11-3B", "O1-11-3C", "O1-11-4A", "O1-11-4B", "O1-11-4C", "O1-11-5A", "O1-11-5B", "O1-11-5C", "O1-12-3A", "O1-12-3B", "O1-12-3C", "O1-12-4A", "O1-12-4B", "O1-12-4C", "O1-12-5A", "O1-12-5B", "O1-12-5C", "O1-13-2A", "O1-13-2B", "O1-13-2C", "O1-13-3A", "O1-13-3B", "O1-13-3C", "O1-13-4A", "O1-13-4B", "O1-13-4C", "O1-13-5A", "O1-13-5B", "O1-13-5C", "O1-14-2A", "O1-14-2B", "O1-14-2C", "O1-14-3A", "O1-14-3B", "O1-14-3C", "O1-14-4A", "O1-14-4B", "O1-14-4C", "O1-14-5A", "O1-14-5B", "O1-14-5C", "O1-15-2A", "O1-15-2B", "O1-15-2C", "O1-15-3A", "O1-15-3B", "O1-15-3C", "O1-15-4A", "O1-15-4B", "O1-15-4C", "O1-15-5A", "O1-15-5B", "O1-15-5C", "O1-16-2A", "O1-16-2B", "O1-16-2C", "O1-16-3A", "O1-16-3B", "O1-16-3C", "O1-16-4A", "O1-16-4B", "O1-16-4C", "O1-16-5A", "O1-16-5B", "O1-16-5C", "O1-17-2A", "O1-17-2B", "O1-17-2C", "O1-17-3A", "O1-17-3B", "O1-17-3C", "O1-17-4A", "O1-17-4B", "O1-17-4C", "O1-17-5A", "O1-17-5B", "O1-17-5C", "O1-18-2A", "O1-18-2B", "O1-18-2C", "O1-18-3A", "O1-18-3B", "O1-18-3C", "O1-18-4A", "O1-18-4B", "O1-18-4C", "O1-18-5A", "O1-18-5B", "O1-18-5C", "O1-19-2A", "O1-19-2B", "O1-19-2C", "O1-19-3A", "O1-19-3B", "O1-19-3C", "O1-19-4A", "O1-19-4B", "O1-19-4C", "O1-19-5A", "O1-19-5B", "O1-19-5C", "O1-20-3A", "O1-20-3B", "O1-20-3C", "O1-20-4A", "O1-20-4B", "O1-20-4C", "O1-20-5A", "O1-20-5B", "O1-20-5C", "O1-21-2A", "O1-21-2B", "O1-21-2C", "O1-21-3A", "O1-21-3B", "O1-21-3C", "O1-21-4A", "O1-21-4B", "O1-21-4C", "O1-21-5A", "O1-21-5B", "O1-21-5C", "O1-22-2A", "O1-22-2B", "O1-22-2C", "O1-22-3A", "O1-22-3B", "O1-22-3C", "O1-22-4A", "O1-22-4B", "O1-22-4C", "O1-22-5A", "O1-22-5B", "O1-22-5C", "O1-23-2A", "O1-23-2B", "O1-23-2C", "O1-23-3A", "O1-23-3B", "O1-23-3C", "O1-23-4A", "O1-23-4B", "O1-23-4C", "O1-23-5A", "O1-23-5B", "O1-23-5C", "O1-24-2A", "O1-24-2B", "O1-24-2C", "O1-24-3A", "O1-24-3B", "O1-24-3C", "O1-24-4A", "O1-24-4B", "O1-24-4C", "O1-24-5A", "O1-24-5B", "O1-24-5C", "O1-25-2A", "O1-25-2B", "O1-25-2C", "O1-25-3A", "O1-25-3B", "O1-25-3C", "O1-25-4A", "O1-25-4B", "O1-25-4C", "O1-25-5A", "O1-25-5B", "O1-25-5C", "O1-26-2A", "O1-26-2B", "O1-26-2C", "O1-26-3A", "O1-26-3B", "O1-26-3C", "O1-26-4A", "O1-26-4B", "O1-26-4C", "O1-26-5A", "O1-26-5B", "O1-26-5C", "O2-01-2A", "O2-01-2B", "O2-01-2C", "O2-01-3A", "O2-01-3B", "O2-01-3C", "O2-01-4A", "O2-01-4B", "O2-01-4C", "O2-01-5A", "O2-01-5B", "O2-01-5C", "O2-02-2A", "O2-02-2B", "O2-02-2C", "O2-02-3A", "O2-02-3B", "O2-02-3C", "O2-02-4A", "O2-02-4B", "O2-02-4C", "O2-02-5A", "O2-02-5B", "O2-02-5C", "O2-03-2A", "O2-03-2B", "O2-03-2C", "O2-03-3A", "O2-03-3B", "O2-03-3C", "O2-03-4A", "O2-03-4B", "O2-03-4C", "O2-03-5A", "O2-03-5B", "O2-03-5C", "O2-04-2A", "O2-04-2B", "O2-04-2C", "O2-04-3A", "O2-04-3B", "O2-04-3C", "O2-04-4A", "O2-04-4B", "O2-04-4C", "O2-04-5A", "O2-04-5B", "O2-04-5C", "O2-05-2A", "O2-05-2B", "O2-05-2C", "O2-05-3A", "O2-05-3B", "O2-05-3C", "O2-05-4A", "O2-05-4B", "O2-05-4C", "O2-05-5A", "O2-05-5B", "O2-05-5C", "O2-06-2A", "O2-06-2B", "O2-06-2C", "O2-06-3A", "O2-06-3B", "O2-06-3C", "O2-06-4A", "O2-06-4B", "O2-06-4C", "O2-06-5A", "O2-06-5B", "O2-06-5C", "O2-07-2A", "O2-07-2B", "O2-07-2C", "O2-07-3A", "O2-07-3B", "O2-07-3C", "O2-07-4A", "O2-07-4B", "O2-07-4C", "O2-07-5A", "O2-07-5B", "O2-07-5C", "O2-08-2A", "O2-08-2B", "O2-08-2C", "O2-08-3A", "O2-08-3B", "O2-08-3C", "O2-08-4A", "O2-08-4B", "O2-08-4C", "O2-08-5A", "O2-08-5B", "O2-08-5C", "O2-09-2A", "O2-09-2B", "O2-09-2C", "O2-09-3A", "O2-09-3B", "O2-09-3C", "O2-09-4A", "O2-09-4B", "O2-09-4C", "O2-09-5A", "O2-09-5B", "O2-09-5C", "O2-10-2A", "O2-10-2B", "O2-10-2C", "O2-10-3A", "O2-10-3B", "O2-10-3C", "O2-10-4A", "O2-10-4B", "O2-10-4C", "O2-10-5A", "O2-10-5B", "O2-10-5C", "O2-11-3A", "O2-11-3B", "O2-11-3C", "O2-11-4A", "O2-11-4B", "O2-11-4C", "O2-11-5A", "O2-11-5B", "O2-11-5C", "O2-12-2A", "O2-12-2B", "O2-12-2C", "O2-12-3A", "O2-12-3B", "O2-12-3C", "O2-12-4A", "O2-12-4B", "O2-12-4C", "O2-12-5A", "O2-12-5B", "O2-12-5C", "O2-13-2A", "O2-13-2B", "O2-13-2C", "O2-13-3A", "O2-13-3B", "O2-13-3C", "O2-13-4A", "O2-13-4B", "O2-13-4C", "O2-13-5A", "O2-13-5B", "O2-13-5C", "O2-14-2A", "O2-14-2B", "O2-14-2C", "O2-14-3A", "O2-14-3B", "O2-14-3C", "O2-14-4A", "O2-14-4B", "O2-14-4C", "O2-14-5A", "O2-14-5B", "O2-14-5C", "O2-15-2A", "O2-15-2B", "O2-15-2C", "O2-15-3A", "O2-15-3B", "O2-15-3C", "O2-15-4A", "O2-15-4B", "O2-15-4C", "O2-15-5A", "O2-15-5B", "O2-15-5C", "O2-16-2A", "O2-16-2B", "O2-16-2C", "O2-16-3A", "O2-16-3B", "O2-16-3C", "O2-16-4A", "O2-16-4B", "O2-16-4C", "O2-16-5A", "O2-16-5B", "O2-16-5C", "O2-17-2A", "O2-17-2B", "O2-17-2C", "O2-17-3A", "O2-17-3B", "O2-17-3C", "O2-17-4A", "O2-17-4B", "O2-17-4C", "O2-17-5A", "O2-17-5B", "O2-17-5C", "O2-18-2A", "O2-18-2B", "O2-18-2C", "O2-18-3A", "O2-18-3B", "O2-18-3C", "O2-18-4A", "O2-18-4B", "O2-18-4C", "O2-18-5A", "O2-18-5B", "O2-18-5C", "O2-19-3A", "O2-19-3B", "O2-19-3C", "O2-19-4A", "O2-19-4B", "O2-19-4C", "O2-19-5A", "O2-19-5B", "O2-19-5C", "O2-20-2A", "O2-20-2B", "O2-20-2C", "O2-20-3A", "O2-20-3B", "O2-20-3C", "O2-20-4A", "O2-20-4B", "O2-20-4C", "O2-20-5A", "O2-20-5B", "O2-20-5C", "O2-21-2A", "O2-21-2B", "O2-21-2C", "O2-21-3A", "O2-21-3B", "O2-21-3C", "O2-21-4A", "O2-21-4B", "O2-21-4C", "O2-21-5A", "O2-21-5B", "O2-21-5C", "O2-22-2A", "O2-22-2B", "O2-22-2C", "O2-22-3A", "O2-22-3B", "O2-22-3C", "O2-22-4A", "O2-22-4B", "O2-22-4C", "O2-22-5A", "O2-22-5B", "O2-22-5C", "O2-23-2A", "O2-23-2B", "O2-23-2C", "O2-23-3A", "O2-23-3B", "O2-23-3C", "O2-23-4A", "O2-23-4B", "O2-23-4C", "O2-23-5A", "O2-23-5B", "O2-23-5C", "O2-24-2A", "O2-24-2B", "O2-24-2C", "O2-24-3A", "O2-24-3B", "O2-24-3C", "O2-24-4A", "O2-24-4B", "O2-24-4C", "O2-24-5A", "O2-24-5B", "O2-24-5C", "O2-25-2A", "O2-25-2B", "O2-25-2C", "O2-25-3A", "O2-25-3B", "O2-25-3C", "O2-25-4A", "O2-25-4B", "O2-25-4C", "O2-25-5A", "O2-25-5B", "O2-25-5C"], "id": "g_O_ALLE_O123"}, {"rayon": "P", "alle": "ALLE P0", "emplacements": ["P1-01-1A", "P1-01-1B", "P1-01-1C", "P1-02-1A", "P1-02-1B", "P1-02-1C", "P1-03-1A", "P1-03-1B", "P1-03-1C", "P1-04-1A", "P1-04-1B", "P1-04-1C", "P1-05-1A", "P1-05-1B", "P1-05-1C", "P1-06-1A", "P1-06-1B", "P1-06-1C", "P1-07-1A", "P1-07-1B", "P1-07-1C", "P1-08-1A", "P1-08-1B", "P1-08-1C", "P1-09-1A", "P1-09-1B", "P1-09-1C", "P1-10-1A", "P1-10-1B", "P1-10-1C", "P1-12-1A", "P1-12-1B", "P1-12-1C", "P1-13-1A", "P1-13-1B", "P1-13-1C", "P1-14-1A", "P1-14-1B", "P1-14-1C", "P1-15-1A", "P1-15-1B", "P1-15-1C", "P1-16-1A", "P1-16-1B", "P1-16-1C", "P1-17-1A", "P1-17-1B", "P1-17-1C", "P1-18-1A", "P1-18-1B", "P1-18-1C", "P1-20-1A", "P1-20-1B", "P1-20-1C", "P1-21-1A", "P1-21-1B", "P1-21-1C", "P1-22-1A", "P1-22-1B", "P1-22-1C", "P1-23-1A", "P1-23-1B", "P1-23-1C", "P1-24-1A", "P1-24-1B", "P1-24-1C", "P1-25-1A", "P1-25-1B", "P1-25-1C", "P2-01-1A", "P2-01-1B", "P2-01-1C", "P2-02-1A", "P2-02-1B", "P2-02-1C", "P2-03-1A", "P2-03-1B", "P2-03-1C", "P2-04-1A", "P2-04-1B", "P2-04-1C", "P2-05-1A", "P2-05-1B", "P2-05-1C", "P2-06-1A", "P2-06-1B", "P2-06-1C", "P2-07-1A", "P2-07-1B", "P2-07-1C", "P2-08-1A", "P2-08-1B", "P2-08-1C", "P2-09-1A", "P2-09-1B", "P2-09-1C", "P2-10-1A", "P2-10-1B", "P2-10-1C", "P2-11-1A", "P2-11-1B", "P2-11-1C", "P2-13-1A", "P2-13-1B", "P2-13-1C", "P2-14-1A", "P2-14-1B", "P2-14-1C", "P2-15-1A", "P2-15-1B", "P2-15-1C", "P2-16-1A", "P2-16-1B", "P2-16-1C", "P2-17-1A", "P2-17-1B", "P2-17-1C", "P2-18-1A", "P2-18-1B", "P2-18-1C", "P2-19-1A", "P2-19-1B", "P2-19-1C", "P2-21-1A", "P2-21-1B", "P2-21-1C", "P2-22-1A", "P2-22-1B", "P2-22-1C", "P2-23-1A", "P2-23-1B", "P2-23-1C", "P2-24-1A", "P2-24-1B", "P2-24-1C", "P2-25-1A", "P2-25-1B", "P2-25-1C", "P2-26-1A", "P2-26-1B", "P2-26-1C"], "id": "g_P_ALLE_P0"}, {"rayon": "P", "alle": "ALLE P123", "emplacements": ["P1-01-2A", "P1-01-2B", "P1-01-2C", "P1-01-3A", "P1-01-3B", "P1-01-3C", "P1-01-4A", "P1-01-4B", "P1-01-4C", "P1-01-5A", "P1-01-5B", "P1-01-5C", "P1-02-2A", "P1-02-2B", "P1-02-2C", "P1-02-3A", "P1-02-3B", "P1-02-3C", "P1-02-4A", "P1-02-4B", "P1-02-4C", "P1-02-5A", "P1-02-5B", "P1-02-5C", "P1-03-2A", "P1-03-2B", "P1-03-2C", "P1-03-3A", "P1-03-3B", "P1-03-3C", "P1-03-4A", "P1-03-4B", "P1-03-4C", "P1-03-5A", "P1-03-5B", "P1-03-5C", "P1-04-2A", "P1-04-2B", "P1-04-2C", "P1-04-3A", "P1-04-3B", "P1-04-3C", "P1-04-4A", "P1-04-4B", "P1-04-4C", "P1-04-5A", "P1-04-5B", "P1-04-5C", "P1-05-2A", "P1-05-2B", "P1-05-2C", "P1-05-3A", "P1-05-3B", "P1-05-3C", "P1-05-4A", "P1-05-4B", "P1-05-4C", "P1-05-5A", "P1-05-5B", "P1-05-5C", "P1-06-2A", "P1-06-2B", "P1-06-2C", "P1-06-3A", "P1-06-3B", "P1-06-3C", "P1-06-4A", "P1-06-4B", "P1-06-4C", "P1-06-5A", "P1-06-5B", "P1-06-5C", "P1-07-2A", "P1-07-2B", "P1-07-2C", "P1-07-3A", "P1-07-3B", "P1-07-3C", "P1-07-4A", "P1-07-4B", "P1-07-4C", "P1-07-5A", "P1-07-5B", "P1-07-5C", "P1-08-2A", "P1-08-2B", "P1-08-2C", "P1-08-3A", "P1-08-3B", "P1-08-3C", "P1-08-4A", "P1-08-4B", "P1-08-4C", "P1-08-5A", "P1-08-5B", "P1-08-5C", "P1-09-2A", "P1-09-2B", "P1-09-2C", "P1-09-3A", "P1-09-3B", "P1-09-3C", "P1-09-4A", "P1-09-4B", "P1-09-4C", "P1-09-5A", "P1-09-5B", "P1-09-5C", "P1-10-2A", "P1-10-2B", "P1-10-2C", "P1-10-3A", "P1-10-3B", "P1-10-3C", "P1-10-4A", "P1-10-4B", "P1-10-4C", "P1-10-5A", "P1-10-5B", "P1-10-5C", "P1-11-3A", "P1-11-3B", "P1-11-3C", "P1-11-4A", "P1-11-4B", "P1-11-4C", "P1-11-5A", "P1-11-5B", "P1-11-5C", "P1-12-2A", "P1-12-2B", "P1-12-2C", "P1-12-3A", "P1-12-3B", "P1-12-3C", "P1-12-4A", "P1-12-4B", "P1-12-4C", "P1-12-5A", "P1-12-5B", "P1-12-5C", "P1-13-2A", "P1-13-2B", "P1-13-2C", "P1-13-3A", "P1-13-3B", "P1-13-3C", "P1-13-4A", "P1-13-4B", "P1-13-4C", "P1-13-5A", "P1-13-5B", "P1-13-5C", "P1-14-2A", "P1-14-2B", "P1-14-2C", "P1-14-3A", "P1-14-3B", "P1-14-3C", "P1-14-4A", "P1-14-4B", "P1-14-4C", "P1-14-5A", "P1-14-5B", "P1-14-5C", "P1-15-2A", "P1-15-2B", "P1-15-2C", "P1-15-3A", "P1-15-3B", "P1-15-3C", "P1-15-4A", "P1-15-4B", "P1-15-4C", "P1-15-5A", "P1-15-5B", "P1-15-5C", "P1-16-2A", "P1-16-2B", "P1-16-2C", "P1-16-3A", "P1-16-3B", "P1-16-3C", "P1-16-4A", "P1-16-4B", "P1-16-4C", "P1-16-5A", "P1-16-5B", "P1-16-5C", "P1-17-2A", "P1-17-2B", "P1-17-2C", "P1-17-3A", "P1-17-3B", "P1-17-3C", "P1-17-4A", "P1-17-4B", "P1-17-4C", "P1-17-5A", "P1-17-5B", "P1-17-5C", "P1-18-2A", "P1-18-2B", "P1-18-2C", "P1-18-3A", "P1-18-3B", "P1-18-3C", "P1-18-4A", "P1-18-4B", "P1-18-4C", "P1-18-5A", "P1-18-5B", "P1-18-5C", "P1-19-3A", "P1-19-3B", "P1-19-3C", "P1-19-4A", "P1-19-4B", "P1-19-4C", "P1-19-5A", "P1-19-5B", "P1-19-5C", "P1-20-2A", "P1-20-2B", "P1-20-2C", "P1-20-3A", "P1-20-3B", "P1-20-3C", "P1-20-4A", "P1-20-4B", "P1-20-4C", "P1-20-5A", "P1-20-5B", "P1-20-5C", "P1-21-2A", "P1-21-2B", "P1-21-2C", "P1-21-3A", "P1-21-3B", "P1-21-3C", "P1-21-4A", "P1-21-4B", "P1-21-4C", "P1-21-5A", "P1-21-5B", "P1-21-5C", "P1-22-2A", "P1-22-2B", "P1-22-2C", "P1-22-3A", "P1-22-3B", "P1-22-3C", "P1-22-4A", "P1-22-4B", "P1-22-4C", "P1-22-5A", "P1-22-5B", "P1-22-5C", "P1-23-2A", "P1-23-2B", "P1-23-2C", "P1-23-3A", "P1-23-3B", "P1-23-3C", "P1-23-4A", "P1-23-4B", "P1-23-4C", "P1-23-5A", "P1-23-5B", "P1-23-5C", "P1-24-2A", "P1-24-2B", "P1-24-2C", "P1-24-3A", "P1-24-3B", "P1-24-3C", "P1-24-4A", "P1-24-4B", "P1-24-4C", "P1-24-5A", "P1-24-5B", "P1-24-5C", "P1-25-2A", "P1-25-2B", "P1-25-2C", "P1-25-3A", "P1-25-3B", "P1-25-3C", "P1-25-4A", "P1-25-4B", "P1-25-4C", "P1-25-5A", "P1-25-5B", "P1-25-5C", "P2-01-2A", "P2-01-2B", "P2-01-2C", "P2-01-3A", "P2-01-3B", "P2-01-3C", "P2-01-4A", "P2-01-4B", "P2-01-4C", "P2-01-5A", "P2-01-5B", "P2-01-5C", "P2-02-2A", "P2-02-2B", "P2-02-2C", "P2-02-3A", "P2-02-3B", "P2-02-3C", "P2-02-4A", "P2-02-4B", "P2-02-4C", "P2-02-5A", "P2-02-5B", "P2-02-5C", "P2-03-2A", "P2-03-2B", "P2-03-2C", "P2-03-3A", "P2-03-3B", "P2-03-3C", "P2-03-4A", "P2-03-4B", "P2-03-4C", "P2-03-5A", "P2-03-5B", "P2-03-5C", "P2-04-2A", "P2-04-2B", "P2-04-2C", "P2-04-3A", "P2-04-3B", "P2-04-3C", "P2-04-4A", "P2-04-4B", "P2-04-4C", "P2-04-5A", "P2-04-5B", "P2-04-5C", "P2-05-2A", "P2-05-2B", "P2-05-2C", "P2-05-3A", "P2-05-3B", "P2-05-3C", "P2-05-4A", "P2-05-4B", "P2-05-4C", "P2-05-5A", "P2-05-5B", "P2-05-5C", "P2-06-2A", "P2-06-2B", "P2-06-2C", "P2-06-3A", "P2-06-3B", "P2-06-3C", "P2-06-4A", "P2-06-4B", "P2-06-4C", "P2-06-5A", "P2-06-5B", "P2-06-5C", "P2-07-2A", "P2-07-2B", "P2-07-2C", "P2-07-3A", "P2-07-3B", "P2-07-3C", "P2-07-4A", "P2-07-4B", "P2-07-4C", "P2-07-5A", "P2-07-5B", "P2-07-5C", "P2-08-2A", "P2-08-2B", "P2-08-2C", "P2-08-3A", "P2-08-3B", "P2-08-3C", "P2-08-4A", "P2-08-4B", "P2-08-4C", "P2-08-5A", "P2-08-5B", "P2-08-5C", "P2-09-2A", "P2-09-2B", "P2-09-2C", "P2-09-3A", "P2-09-3B", "P2-09-3C", "P2-09-4A", "P2-09-4B", "P2-09-4C", "P2-09-5A", "P2-09-5B", "P2-09-5C", "P2-10-2A", "P2-10-2B", "P2-10-2C", "P2-10-3A", "P2-10-3B", "P2-10-3C", "P2-10-4A", "P2-10-4B", "P2-10-4C", "P2-10-5A", "P2-10-5B", "P2-10-5C", "P2-11-2A", "P2-11-2B", "P2-11-2C", "P2-11-3A", "P2-11-3B", "P2-11-3C", "P2-11-4A", "P2-11-4B", "P2-11-4C", "P2-11-5A", "P2-11-5B", "P2-11-5C", "P2-12-3A", "P2-12-3B", "P2-12-3C", "P2-12-4A", "P2-12-4B", "P2-12-4C", "P2-12-5A", "P2-12-5B", "P2-12-5C", "P2-13-2A", "P2-13-2B", "P2-13-2C", "P2-13-3A", "P2-13-3B", "P2-13-3C", "P2-13-4A", "P2-13-4B", "P2-13-4C", "P2-13-5A", "P2-13-5B", "P2-13-5C", "P2-14-2A", "P2-14-2B", "P2-14-2C", "P2-14-3A", "P2-14-3B", "P2-14-3C", "P2-14-4A", "P2-14-4B", "P2-14-4C", "P2-14-5A", "P2-14-5B", "P2-14-5C", "P2-15-2A", "P2-15-2B", "P2-15-2C", "P2-15-3A", "P2-15-3B", "P2-15-3C", "P2-15-4A", "P2-15-4B", "P2-15-4C", "P2-15-5A", "P2-15-5B", "P2-15-5C", "P2-16-2A", "P2-16-2B", "P2-16-2C", "P2-16-3A", "P2-16-3B", "P2-16-3C", "P2-16-4A", "P2-16-4B", "P2-16-4C", "P2-16-5A", "P2-16-5B", "P2-16-5C", "P2-17-2A", "P2-17-2B", "P2-17-2C", "P2-17-3A", "P2-17-3B", "P2-17-3C", "P2-17-4A", "P2-17-4B", "P2-17-4C", "P2-17-5A", "P2-17-5B", "P2-17-5C", "P2-18-2A", "P2-18-2B", "P2-18-2C", "P2-18-3A", "P2-18-3B", "P2-18-3C", "P2-18-4A", "P2-18-4B", "P2-18-4C", "P2-18-5A", "P2-18-5B", "P2-18-5C", "P2-19-2A", "P2-19-2B", "P2-19-2C", "P2-19-3A", "P2-19-3B", "P2-19-3C", "P2-19-4A", "P2-19-4B", "P2-19-4C", "P2-19-5A", "P2-19-5B", "P2-19-5C", "P2-20-3A", "P2-20-3B", "P2-20-3C", "P2-20-4A", "P2-20-4B", "P2-20-4C", "P2-20-5A", "P2-20-5B", "P2-20-5C", "P2-21-2A", "P2-21-2B", "P2-21-2C", "P2-21-3A", "P2-21-3B", "P2-21-3C", "P2-21-4A", "P2-21-4B", "P2-21-4C", "P2-21-5A", "P2-21-5B", "P2-21-5C", "P2-22-2A", "P2-22-2B", "P2-22-2C", "P2-22-3A", "P2-22-3B", "P2-22-3C", "P2-22-4A", "P2-22-4B", "P2-22-4C", "P2-22-5A", "P2-22-5B", "P2-22-5C", "P2-23-2A", "P2-23-2B", "P2-23-2C", "P2-23-3A", "P2-23-3B", "P2-23-3C", "P2-23-4A", "P2-23-4B", "P2-23-4C", "P2-23-5A", "P2-23-5B", "P2-23-5C", "P2-24-2A", "P2-24-2B", "P2-24-2C", "P2-24-3A", "P2-24-3B", "P2-24-3C", "P2-24-4A", "P2-24-4B", "P2-24-4C", "P2-24-5A", "P2-24-5B", "P2-24-5C", "P2-25-2A", "P2-25-2B", "P2-25-2C", "P2-25-3A", "P2-25-3B", "P2-25-3C", "P2-25-4A", "P2-25-4B", "P2-25-4C", "P2-25-5A", "P2-25-5B", "P2-25-5C", "P2-26-2A", "P2-26-2B", "P2-26-2C", "P2-26-3A", "P2-26-3B", "P2-26-3C", "P2-26-4A", "P2-26-4B", "P2-26-4C", "P2-26-5A", "P2-26-5B", "P2-26-5C"], "id": "g_P_ALLE_P123"}, {"rayon": "Q", "alle": "ALLE Q0", "emplacements": ["Q1-01-1A", "Q1-01-1B", "Q1-01-1C", "Q1-02-1A", "Q1-02-1B", "Q1-02-1C", "Q1-03-1A", "Q1-03-1B", "Q1-03-1C", "Q1-04-1A", "Q1-04-1B", "Q1-04-1C", "Q1-05-1A", "Q1-05-1B", "Q1-05-1C", "Q1-06-1A", "Q1-06-1B", "Q1-06-1C", "Q1-07-1A", "Q1-07-1B", "Q1-07-1C", "Q1-08-1A", "Q1-08-1B", "Q1-08-1C", "Q1-09-1A", "Q1-09-1B", "Q1-09-1C", "Q1-10-1A", "Q1-10-1B", "Q1-10-1C", "Q1-11-1A", "Q1-11-1B", "Q1-11-1C", "Q1-13-1A", "Q1-13-1B", "Q1-13-1C", "Q1-14-1A", "Q1-14-1B", "Q1-14-1C", "Q1-15-1A", "Q1-15-1B", "Q1-15-1C", "Q1-16-1A", "Q1-16-1B", "Q1-16-1C", "Q1-17-1A", "Q1-17-1B", "Q1-17-1C", "Q1-18-1A", "Q1-18-1B", "Q1-18-1C", "Q1-19-1A", "Q1-19-1B", "Q1-19-1C", "Q1-21-1A", "Q1-21-1B", "Q1-21-1C", "Q1-22-1A", "Q1-22-1B", "Q1-22-1C", "Q1-23-1A", "Q1-23-1B", "Q1-23-1C", "Q1-24-1A", "Q1-24-1B", "Q1-24-1C", "Q1-25-1A", "Q1-25-1B", "Q1-25-1C", "Q1-26-1A", "Q1-26-1B", "Q1-26-1C", "Q2-01-1A", "Q2-01-1B", "Q2-01-1C", "Q2-02-1A", "Q2-02-1B", "Q2-02-1C", "Q2-03-1A", "Q2-03-1B", "Q2-03-1C", "Q2-04-1A", "Q2-04-1B", "Q2-04-1C", "Q2-05-1A", "Q2-05-1B", "Q2-05-1C", "Q2-06-1A", "Q2-06-1B", "Q2-06-1C", "Q2-07-1A", "Q2-07-1B", "Q2-07-1C", "Q2-08-1A", "Q2-08-1B", "Q2-08-1C", "Q2-09-1A", "Q2-09-1B", "Q2-09-1C", "Q2-10-1A", "Q2-10-1B", "Q2-10-1C", "Q2-11-1A", "Q2-11-1B", "Q2-11-1C", "Q2-12-1A", "Q2-12-1B", "Q2-12-1C", "Q2-13-1A", "Q2-13-1B", "Q2-13-1C", "Q2-14-1A", "Q2-14-1B", "Q2-14-1C", "Q2-15-1A", "Q2-15-1B", "Q2-15-1C", "Q2-16-1A", "Q2-16-1B", "Q2-16-1C", "Q2-17-1A", "Q2-17-1B", "Q2-17-1C", "Q2-18-1A", "Q2-18-1B", "Q2-18-1C", "Q2-19-1A", "Q2-19-1B", "Q2-19-1C", "Q2-20-1A", "Q2-20-1B", "Q2-20-1C", "Q2-21-1A", "Q2-21-1B", "Q2-21-1C", "Q2-22-1A", "Q2-22-1B", "Q2-22-1C", "Q2-23-1A", "Q2-23-1B", "Q2-23-1C", "Q2-24-1A", "Q2-24-1B", "Q2-24-1C", "Q2-25-1A", "Q2-25-1B", "Q2-25-1C", "Q2-26-1A", "Q2-26-1B", "Q2-26-1C"], "id": "g_Q_ALLE_Q0"}, {"rayon": "Q", "alle": "ALLE Q123", "emplacements": ["Q1-01-2A", "Q1-01-2B", "Q1-01-2C", "Q1-01-3A", "Q1-01-3B", "Q1-01-3C", "Q1-01-4A", "Q1-01-4B", "Q1-01-4C", "Q1-01-5A", "Q1-01-5B", "Q1-01-5C", "Q1-02-2A", "Q1-02-2B", "Q1-02-2C", "Q1-02-3A", "Q1-02-3B", "Q1-02-3C", "Q1-02-4A", "Q1-02-4B", "Q1-02-4C", "Q1-02-5A", "Q1-02-5B", "Q1-02-5C", "Q1-03-2A", "Q1-03-2B", "Q1-03-2C", "Q1-03-3A", "Q1-03-3B", "Q1-03-3C", "Q1-03-4A", "Q1-03-4B", "Q1-03-4C", "Q1-03-5A", "Q1-03-5B", "Q1-03-5C", "Q1-04-2A", "Q1-04-2B", "Q1-04-2C", "Q1-04-3A", "Q1-04-3B", "Q1-04-3C", "Q1-04-4A", "Q1-04-4B", "Q1-04-4C", "Q1-04-5A", "Q1-04-5B", "Q1-04-5C", "Q1-05-2A", "Q1-05-2B", "Q1-05-2C", "Q1-05-3A", "Q1-05-3B", "Q1-05-3C", "Q1-05-4A", "Q1-05-4B", "Q1-05-4C", "Q1-05-5A", "Q1-05-5B", "Q1-05-5C", "Q1-06-2A", "Q1-06-2B", "Q1-06-2C", "Q1-06-3A", "Q1-06-3B", "Q1-06-3C", "Q1-06-4A", "Q1-06-4B", "Q1-06-4C", "Q1-06-5A", "Q1-06-5B", "Q1-06-5C", "Q1-07-2A", "Q1-07-2B", "Q1-07-2C", "Q1-07-3A", "Q1-07-3B", "Q1-07-3C", "Q1-07-4A", "Q1-07-4B", "Q1-07-4C", "Q1-07-5A", "Q1-07-5B", "Q1-07-5C", "Q1-08-2A", "Q1-08-2B", "Q1-08-2C", "Q1-08-3A", "Q1-08-3B", "Q1-08-3C", "Q1-08-4A", "Q1-08-4B", "Q1-08-4C", "Q1-08-5A", "Q1-08-5B", "Q1-08-5C", "Q1-09-2A", "Q1-09-2B", "Q1-09-2C", "Q1-09-3A", "Q1-09-3B", "Q1-09-3C", "Q1-09-4A", "Q1-09-4B", "Q1-09-4C", "Q1-09-5A", "Q1-09-5B", "Q1-09-5C", "Q1-10-2A", "Q1-10-2B", "Q1-10-2C", "Q1-10-3A", "Q1-10-3B", "Q1-10-3C", "Q1-10-4A", "Q1-10-4B", "Q1-10-4C", "Q1-10-5A", "Q1-10-5B", "Q1-10-5C", "Q1-11-2A", "Q1-11-2B", "Q1-11-2C", "Q1-11-3A", "Q1-11-3B", "Q1-11-3C", "Q1-11-4A", "Q1-11-4B", "Q1-11-4C", "Q1-11-5A", "Q1-11-5B", "Q1-11-5C", "Q1-12-3A", "Q1-12-3B", "Q1-12-3C", "Q1-12-4A", "Q1-12-4B", "Q1-12-4C", "Q1-12-5A", "Q1-12-5B", "Q1-12-5C", "Q1-13-2A", "Q1-13-2B", "Q1-13-2C", "Q1-13-3A", "Q1-13-3B", "Q1-13-3C", "Q1-13-4A", "Q1-13-4B", "Q1-13-4C", "Q1-13-5A", "Q1-13-5B", "Q1-13-5C", "Q1-14-2A", "Q1-14-2B", "Q1-14-2C", "Q1-14-3A", "Q1-14-3B", "Q1-14-3C", "Q1-14-4A", "Q1-14-4B", "Q1-14-4C", "Q1-14-5A", "Q1-14-5B", "Q1-14-5C", "Q1-15-2A", "Q1-15-2B", "Q1-15-2C", "Q1-15-3A", "Q1-15-3B", "Q1-15-3C", "Q1-15-4A", "Q1-15-4B", "Q1-15-4C", "Q1-15-5A", "Q1-15-5B", "Q1-15-5C", "Q1-16-2A", "Q1-16-2B", "Q1-16-2C", "Q1-16-3A", "Q1-16-3B", "Q1-16-3C", "Q1-16-4A", "Q1-16-4B", "Q1-16-4C", "Q1-16-5A", "Q1-16-5B", "Q1-16-5C", "Q1-17-2A", "Q1-17-2B", "Q1-17-2C", "Q1-17-3A", "Q1-17-3B", "Q1-17-3C", "Q1-17-4A", "Q1-17-4B", "Q1-17-4C", "Q1-17-5A", "Q1-17-5B", "Q1-17-5C", "Q1-18-2A", "Q1-18-2B", "Q1-18-2C", "Q1-18-3A", "Q1-18-3B", "Q1-18-3C", "Q1-18-4A", "Q1-18-4B", "Q1-18-4C", "Q1-18-5A", "Q1-18-5B", "Q1-18-5C", "Q1-19-2A", "Q1-19-2B", "Q1-19-2C", "Q1-19-3A", "Q1-19-3B", "Q1-19-3C", "Q1-19-4A", "Q1-19-4B", "Q1-19-4C", "Q1-19-5A", "Q1-19-5B", "Q1-19-5C", "Q1-20-3A", "Q1-20-3B", "Q1-20-3C", "Q1-20-4A", "Q1-20-4B", "Q1-20-4C", "Q1-20-5A", "Q1-20-5B", "Q1-20-5C", "Q1-21-2A", "Q1-21-2B", "Q1-21-2C", "Q1-21-3A", "Q1-21-3B", "Q1-21-3C", "Q1-21-4A", "Q1-21-4B", "Q1-21-4C", "Q1-21-5A", "Q1-21-5B", "Q1-21-5C", "Q1-22-2A", "Q1-22-2B", "Q1-22-2C", "Q1-22-3A", "Q1-22-3B", "Q1-22-3C", "Q1-22-4A", "Q1-22-4B", "Q1-22-4C", "Q1-22-5A", "Q1-22-5B", "Q1-22-5C", "Q1-23-2A", "Q1-23-2B", "Q1-23-2C", "Q1-23-3A", "Q1-23-3B", "Q1-23-3C", "Q1-23-4A", "Q1-23-4B", "Q1-23-4C", "Q1-23-5A", "Q1-23-5B", "Q1-23-5C", "Q1-24-2A", "Q1-24-2B", "Q1-24-2C", "Q1-24-3A", "Q1-24-3B", "Q1-24-3C", "Q1-24-4A", "Q1-24-4B", "Q1-24-4C", "Q1-24-5A", "Q1-24-5B", "Q1-24-5C", "Q1-25-2A", "Q1-25-2B", "Q1-25-2C", "Q1-25-3A", "Q1-25-3B", "Q1-25-3C", "Q1-25-4A", "Q1-25-4B", "Q1-25-4C", "Q1-25-5A", "Q1-25-5B", "Q1-25-5C", "Q1-26-2A", "Q1-26-2B", "Q1-26-2C", "Q1-26-3A", "Q1-26-3B", "Q1-26-3C", "Q1-26-4A", "Q1-26-4B", "Q1-26-4C", "Q1-26-5A", "Q1-26-5B", "Q1-26-5C", "Q2-01-2A", "Q2-01-2B", "Q2-01-2C", "Q2-01-3A", "Q2-01-3B", "Q2-01-3C", "Q2-01-4A", "Q2-01-4B", "Q2-01-4C", "Q2-01-5A", "Q2-01-5B", "Q2-01-5C", "Q2-02-2A", "Q2-02-2B", "Q2-02-2C", "Q2-02-3A", "Q2-02-3B", "Q2-02-3C", "Q2-02-4A", "Q2-02-4B", "Q2-02-4C", "Q2-02-5A", "Q2-02-5B", "Q2-02-5C", "Q2-03-2A", "Q2-03-2B", "Q2-03-2C", "Q2-03-3A", "Q2-03-3B", "Q2-03-3C", "Q2-03-4A", "Q2-03-4B", "Q2-03-4C", "Q2-03-5A", "Q2-03-5B", "Q2-03-5C", "Q2-04-2A", "Q2-04-2B", "Q2-04-2C", "Q2-04-3A", "Q2-04-3B", "Q2-04-3C", "Q2-04-4A", "Q2-04-4B", "Q2-04-4C", "Q2-04-5A", "Q2-04-5B", "Q2-04-5C", "Q2-05-2A", "Q2-05-2B", "Q2-05-2C", "Q2-05-3A", "Q2-05-3B", "Q2-05-3C", "Q2-05-4A", "Q2-05-4B", "Q2-05-4C", "Q2-05-5A", "Q2-05-5B", "Q2-05-5C", "Q2-06-2A", "Q2-06-2B", "Q2-06-2C", "Q2-06-3A", "Q2-06-3B", "Q2-06-3C", "Q2-06-4A", "Q2-06-4B", "Q2-06-4C", "Q2-06-5A", "Q2-06-5B", "Q2-06-5C", "Q2-07-2A", "Q2-07-2B", "Q2-07-2C", "Q2-07-3A", "Q2-07-3B", "Q2-07-3C", "Q2-07-4A", "Q2-07-4B", "Q2-07-4C", "Q2-07-5A", "Q2-07-5B", "Q2-07-5C", "Q2-08-2A", "Q2-08-2B", "Q2-08-2C", "Q2-08-3A", "Q2-08-3B", "Q2-08-3C", "Q2-08-4A", "Q2-08-4B", "Q2-08-4C", "Q2-08-5A", "Q2-08-5B", "Q2-08-5C", "Q2-09-2A", "Q2-09-2B", "Q2-09-2C", "Q2-09-3A", "Q2-09-3B", "Q2-09-3C", "Q2-09-4A", "Q2-09-4B", "Q2-09-4C", "Q2-09-5A", "Q2-09-5B", "Q2-09-5C", "Q2-10-2A", "Q2-10-2B", "Q2-10-2C", "Q2-10-3A", "Q2-10-3B", "Q2-10-3C", "Q2-10-4A", "Q2-10-4B", "Q2-10-4C", "Q2-10-5A", "Q2-10-5B", "Q2-10-5C", "Q2-11-2A", "Q2-11-2B", "Q2-11-2C", "Q2-11-3A", "Q2-11-3B", "Q2-11-3C", "Q2-11-4A", "Q2-11-4B", "Q2-11-4C", "Q2-11-5A", "Q2-11-5B", "Q2-11-5C", "Q2-12-2A", "Q2-12-2B", "Q2-12-2C", "Q2-12-3A", "Q2-12-3B", "Q2-12-3C", "Q2-12-4A", "Q2-12-4B", "Q2-12-4C", "Q2-12-5A", "Q2-12-5B", "Q2-12-5C", "Q2-13-2A", "Q2-13-2B", "Q2-13-2C", "Q2-13-3A", "Q2-13-3B", "Q2-13-3C", "Q2-13-4A", "Q2-13-4B", "Q2-13-4C", "Q2-13-5A", "Q2-13-5B", "Q2-13-5C", "Q2-14-2A", "Q2-14-2B", "Q2-14-2C", "Q2-14-3A", "Q2-14-3B", "Q2-14-3C", "Q2-14-4A", "Q2-14-4B", "Q2-14-4C", "Q2-14-5A", "Q2-14-5B", "Q2-14-5C", "Q2-15-2A", "Q2-15-2B", "Q2-15-2C", "Q2-15-3A", "Q2-15-3B", "Q2-15-3C", "Q2-15-4A", "Q2-15-4B", "Q2-15-4C", "Q2-15-5A", "Q2-15-5B", "Q2-15-5C", "Q2-16-2A", "Q2-16-2B", "Q2-16-2C", "Q2-16-3A", "Q2-16-3B", "Q2-16-3C", "Q2-16-4A", "Q2-16-4B", "Q2-16-4C", "Q2-16-5A", "Q2-16-5B", "Q2-16-5C", "Q2-17-2A", "Q2-17-2B", "Q2-17-2C", "Q2-17-3A", "Q2-17-3B", "Q2-17-3C", "Q2-17-4A", "Q2-17-4B", "Q2-17-4C", "Q2-17-5A", "Q2-17-5B", "Q2-17-5C", "Q2-18-2A", "Q2-18-2B", "Q2-18-2C", "Q2-18-3A", "Q2-18-3B", "Q2-18-3C", "Q2-18-4A", "Q2-18-4B", "Q2-18-4C", "Q2-18-5A", "Q2-18-5B", "Q2-18-5C", "Q2-19-2A", "Q2-19-2B", "Q2-19-2C", "Q2-19-3A", "Q2-19-3B", "Q2-19-3C", "Q2-19-4A", "Q2-19-4B", "Q2-19-4C", "Q2-19-5A", "Q2-19-5B", "Q2-19-5C", "Q2-20-2A", "Q2-20-2B", "Q2-20-2C", "Q2-20-3A", "Q2-20-3B", "Q2-20-3C", "Q2-20-4A", "Q2-20-4B", "Q2-20-4C", "Q2-20-5A", "Q2-20-5B", "Q2-20-5C", "Q2-21-2A", "Q2-21-2B", "Q2-21-2C", "Q2-21-3A", "Q2-21-3B", "Q2-21-3C", "Q2-21-4A", "Q2-21-4B", "Q2-21-4C", "Q2-21-5A", "Q2-21-5B", "Q2-21-5C", "Q2-22-2A", "Q2-22-2B", "Q2-22-2C", "Q2-22-3A", "Q2-22-3B", "Q2-22-3C", "Q2-22-4A", "Q2-22-4B", "Q2-22-4C", "Q2-22-5A", "Q2-22-5B", "Q2-22-5C", "Q2-23-2A", "Q2-23-2B", "Q2-23-2C", "Q2-23-3A", "Q2-23-3B", "Q2-23-3C", "Q2-23-4A", "Q2-23-4B", "Q2-23-4C", "Q2-23-5A", "Q2-23-5B", "Q2-23-5C", "Q2-24-2A", "Q2-24-2B", "Q2-24-2C", "Q2-24-3A", "Q2-24-3B", "Q2-24-3C", "Q2-24-4A", "Q2-24-4B", "Q2-24-4C", "Q2-24-5A", "Q2-24-5B", "Q2-24-5C", "Q2-25-2A", "Q2-25-2B", "Q2-25-2C", "Q2-25-3A", "Q2-25-3B", "Q2-25-3C", "Q2-25-4A", "Q2-25-4B", "Q2-25-4C", "Q2-25-5A", "Q2-25-5B", "Q2-25-5C", "Q2-26-2A", "Q2-26-2B", "Q2-26-2C", "Q2-26-3A", "Q2-26-3B", "Q2-26-3C", "Q2-26-4A", "Q2-26-4B", "Q2-26-4C", "Q2-26-5A", "Q2-26-5B", "Q2-26-5C"], "id": "g_Q_ALLE_Q123"}, {"rayon": "S", "alle": "ALLE S0", "emplacements": ["S1-01-1A", "S1-01-1B", "S1-01-1C", "S1-02-1A", "S1-02-1B", "S1-02-1C", "S1-03-1A", "S1-03-1B", "S1-03-1C", "S1-04-1A", "S1-04-1B", "S1-04-1C", "S1-05-1A", "S1-05-1B", "S1-05-1C", "S1-06-1A", "S1-06-1B", "S1-06-1C"], "id": "g_S_ALLE_S0"}, {"rayon": "S", "alle": "ALLE S123", "emplacements": ["S1-01-2A", "S1-01-2B", "S1-01-2C", "S1-01-3A", "S1-01-3B", "S1-01-3C", "S1-01-4A", "S1-01-4B", "S1-01-4C", "S1-01-5A", "S1-01-5B", "S1-01-5C", "S1-02-2A", "S1-02-2B", "S1-02-2C", "S1-02-3A", "S1-02-3B", "S1-02-3C", "S1-02-4A", "S1-02-4B", "S1-02-4C", "S1-02-5A", "S1-02-5B", "S1-02-5C", "S1-03-2A", "S1-03-2B", "S1-03-2C", "S1-03-3A", "S1-03-3B", "S1-03-3C", "S1-03-4A", "S1-03-4B", "S1-03-4C", "S1-03-5A", "S1-03-5B", "S1-03-5C", "S1-04-2A", "S1-04-2B", "S1-04-2C", "S1-04-3A", "S1-04-3B", "S1-04-3C", "S1-04-4A", "S1-04-4B", "S1-04-4C", "S1-04-5A", "S1-04-5B", "S1-04-5C", "S1-05-2A", "S1-05-2B", "S1-05-2C", "S1-05-3A", "S1-05-3B", "S1-05-3C", "S1-05-4A", "S1-05-4B", "S1-05-4C", "S1-05-5A", "S1-05-5B", "S1-05-5C", "S1-06-2A", "S1-06-2B", "S1-06-2C", "S1-06-3A", "S1-06-3B", "S1-06-3C", "S1-06-4A", "S1-06-4B", "S1-06-4C", "S1-06-5A", "S1-06-5B", "S1-06-5C"], "id": "g_S_ALLE_S123"}, {"rayon": "SOL-1", "alle": "SOL", "emplacements": [], "id": "g_SOL_1_SOL"}, {"rayon": "SOL-2", "alle": "SOL", "emplacements": [], "id": "g_SOL_2_SOL"}, {"rayon": "SOL-3", "alle": "SOL", "emplacements": [], "id": "g_SOL_3_SOL"}, {"rayon": "SOL-4", "alle": "SOL", "emplacements": [], "id": "g_SOL_4_SOL"}, {"rayon": "SOL-5", "alle": "SOL", "emplacements": [], "id": "g_SOL_5_SOL"}, {"rayon": "SOL-6", "alle": "SOL", "emplacements": [], "id": "g_SOL_6_SOL"}, {"rayon": "MUR-1", "alle": "MUR-1", "emplacements": [], "id": "g_MUR_1_MUR_1"}, {"rayon": "MUR-2", "alle": "MUR-2", "emplacements": [], "id": "g_MUR_2_MUR_2"}, {"rayon": "MUR-3", "alle": "MUR-3", "emplacements": [], "id": "g_MUR_3_MUR_3"}, {"rayon": "MUR-N1", "alle": "MUR-N1", "emplacements": [], "id": "g_MUR_N1_MUR_N1"}, {"rayon": "MUR-O-P", "alle": "MUR-O-P", "emplacements": [], "id": "g_MUR_O_P_MUR_O_P"}, {"rayon": "MUR-QUAI-REC", "alle": "MUR-QUAI-REC", "emplacements": [], "id": "g_MUR_QUAI_REC_MUR_QUAI_REC"}, {"rayon": "MUR-RAK-C1-C2", "alle": "MUR-RAK-C1-C2", "emplacements": [], "id": "g_MUR_RAK_C1_C2_MUR_RAK_C1_C2"}];
+</script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- STORAGE ---------------- */
+  const LS_INV = "gc_inventaires_v2";
+  const LS_GRP = "gc_groupes_v2";
+  const LS_COMPTE_C1 = "gc_compte_c1_v2";
+  const LS_COMPTE_C2 = "gc_compte_c2_v2";
+  const LS_TERMINAL = "gc_terminal_v1";
+
+  const uid = () => "id_" + Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+
+  function load(key, fallback){
+    try{
+      const raw = localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    }catch(e){ return fallback; }
+  }
+  function save(key, data){
+    localStorage.setItem(key, JSON.stringify(data));
+    flashSaved();
+  }
+
+  let inventaires = load(LS_INV, []);
+  let groupes = load(LS_GRP, null);
+  if(!groupes){
+    groupes = window.DEFAULT_GROUPS.map(g => ({ id: g.id, rayon: g.rayon, alle: g.alle, emplacements: g.emplacements.slice() }));
+    save(LS_GRP, groupes);
+  }
+
+  const roundStore = {
+    c1: { compteKey: LS_COMPTE_C1, compte: load(LS_COMPTE_C1, {}) },
+    c2: { compteKey: LS_COMPTE_C2, compte: load(LS_COMPTE_C2, {}) },
+  };
+
+  let terminal = load(LS_TERMINAL, { url: "", method: "POST_JSON" });
+
+  /* ---------------- TOAST / SAVE INDICATOR ---------------- */
+  let saveTimer = null;
+  function flashSaved(){
+    const el = document.getElementById("saveIndicator");
+    el.classList.add("show");
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=> el.classList.remove("show"), 1600);
+  }
+  let toastTimer = null;
+  function showToast(msg, isErr){
+    const t = document.getElementById("toast");
+    document.getElementById("toastMsg").textContent = msg;
+    t.classList.toggle("err", !!isErr);
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=> t.classList.remove("show"), 2800);
+  }
+
+  function updateTerminalStatus(){
+    const el = document.getElementById("terminalStatus");
+    if(terminal.url){
+      el.classList.add("connected");
+      el.querySelector("span:last-child").textContent = "Terminal configuré";
+    } else {
+      el.classList.remove("connected");
+      el.querySelector("span:last-child").textContent = "Terminal non configuré";
+    }
+  }
+
+  /* ---------------- SETTINGS MODAL ---------------- */
+  const settingsBackdrop = document.getElementById("settingsBackdrop");
+  document.getElementById("btnSettings").addEventListener("click", ()=>{
+    document.getElementById("s_url").value = terminal.url || "";
+    document.getElementById("s_method").value = terminal.method || "POST_JSON";
+    settingsBackdrop.classList.add("show");
+  });
+  document.getElementById("settingsClose").addEventListener("click", ()=> settingsBackdrop.classList.remove("show"));
+  settingsBackdrop.addEventListener("click", (e)=>{ if(e.target === settingsBackdrop) settingsBackdrop.classList.remove("show"); });
+  document.getElementById("btnSaveSettings").addEventListener("click", ()=>{
+    terminal = {
+      url: document.getElementById("s_url").value.trim(),
+      method: document.getElementById("s_method").value,
+    };
+    save(LS_TERMINAL, terminal);
+    updateTerminalStatus();
+    settingsBackdrop.classList.remove("show");
+    showToast("Paramètres du terminal enregistrés");
+  });
+  document.getElementById("btnClearSettings").addEventListener("click", ()=>{
+    terminal = { url:"", method:"POST_JSON" };
+    save(LS_TERMINAL, terminal);
+    updateTerminalStatus();
+    document.getElementById("s_url").value = "";
+    showToast("Configuration du terminal effacée");
+  });
+
+  /* ---------------- TABS ---------------- */
+  document.querySelectorAll(".tab-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("panel-" + btn.dataset.tab).classList.add("active");
+    });
+  });
+
+  /* ================= INVENTAIRES : liste des groupes de comptage ================= */
+  const invTbody = document.getElementById("invTbody");
+  const invSearch = document.getElementById("invSearch");
+
+  function renderInv(){
+    const q = invSearch.value.trim().toLowerCase();
+    const rows = inventaires.filter(r =>
+      !q || (r.groupe||"").toLowerCase().includes(q) || (r.tete||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q)
+    );
+    document.getElementById("invCount").textContent = inventaires.length;
+    invTbody.innerHTML = "";
+
+    if(rows.length === 0){
+      invTbody.innerHTML = `<tr class="empty-row"><td colspan="5">Aucun groupe de comptage.
+        <div class="hint">Cliquez sur « Ajouter un groupe » pour commencer. Ex : GROUPE 1, GROUPE 2...</div></td></tr>`;
+      return;
+    }
+
+    rows.forEach((row, idx) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td class="mono">${idx+1}</td>
+        <td><input class="cell-input" data-field="groupe" data-id="${row.id}" value="${escapeAttr(row.groupe||"")}" placeholder="Ex : GROUPE 1"></td>
+        <td><input class="cell-input" data-field="tete" data-id="${row.id}" value="${escapeAttr(row.tete||"")}" placeholder="Ex : Ahmed Alami"></td>
+        <td><input class="cell-input" data-field="email" data-id="${row.id}" value="${escapeAttr(row.email||"")}" placeholder="Ex : ahmed@societe.com"></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost" title="Supprimer" data-del="${row.id}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </td>`;
+      invTbody.appendChild(tr);
+    });
+  }
+
+  invTbody.addEventListener("input", (e)=>{
+    const t = e.target;
+    if(t.dataset.field){
+      const row = inventaires.find(r => r.id === t.dataset.id);
+      if(row){
+        row[t.dataset.field] = t.value;
+        save(LS_INV, inventaires);
+        renderAllGrp(); // refresh dropdown options in C1/C2
+      }
+    }
+  });
+
+  invTbody.addEventListener("click", (e)=>{
+    const delBtn = e.target.closest("[data-del]");
+    if(delBtn){
+      inventaires = inventaires.filter(r => r.id !== delBtn.dataset.del);
+      save(LS_INV, inventaires);
+      renderInv();
+      renderAllGrp();
+      showToast("Groupe supprimé de la liste");
+    }
+  });
+
+  document.getElementById("btnAddInv").addEventListener("click", ()=>{
+    inventaires.unshift({ id: uid(), groupe:"", tete:"", email:"" });
+    save(LS_INV, inventaires);
+    renderInv();
+    renderAllGrp();
+    const firstInput = invTbody.querySelector("input[data-field='groupe']");
+    if(firstInput) firstInput.focus();
+  });
+
+  invSearch.addEventListener("input", renderInv);
+
+  /* ================= GROUPES DE COMPTAGE (C1 & C2) ================= */
+
+  function parseEmplacements(str){
+    return (str||"")
+      .split(/[\n,;]+/)
+      .map(s=>s.trim())
+      .filter(Boolean);
+  }
+
+  const editingId = { c1: null, c2: null };
+
+  function els(round){
+    return {
+      tbody: document.querySelector(`.grpTbody[data-round="${round}"]`),
+      search: document.querySelector(`.grpSearch[data-round="${round}"]`),
+      form: document.querySelector(`.grpForm[data-round="${round}"]`),
+      countBadge: document.getElementById(round + "Count"),
+      statGroups: document.querySelector(`.statGroups[data-round="${round}"]`),
+      statEmpl: document.querySelector(`.statEmpl[data-round="${round}"]`),
+      statRayons: document.querySelector(`.statRayons[data-round="${round}"]`),
+    };
+  }
+
+  function renderStats(round){
+    const e = els(round);
+    e.statGroups.textContent = groupes.length;
+    e.statEmpl.textContent = groupes.reduce((sum,g)=> sum + g.emplacements.length, 0).toLocaleString("fr-FR");
+    e.statRayons.textContent = new Set(groupes.map(g=>g.rayon)).size;
+  }
+
+  function groupOptionsHtml(selectedValue){
+    let html = `<option value="">— Choisir —</option>`;
+    inventaires.forEach(r=>{
+      if(!r.groupe) return;
+      const label = r.tete ? `${r.groupe} — ${r.tete}` : r.groupe;
+      const sel = r.groupe === selectedValue ? "selected" : "";
+      html += `<option value="${escapeAttr(r.groupe)}" ${sel}>${escapeHtml(label)}</option>`;
+    });
+    return html;
+  }
+
+  function renderGrp(round){
+    const e = els(round);
+    const store = roundStore[round];
+    const q = e.search.value.trim().toLowerCase();
+    const rows = groupes.filter(g =>
+      !q || (g.rayon||"").toLowerCase().includes(q) || (g.alle||"").toLowerCase().includes(q)
+    );
+    e.countBadge.textContent = groupes.length;
+    renderStats(round);
+    e.tbody.innerHTML = "";
+
+    if(rows.length === 0){
+      e.tbody.innerHTML = `<tr class="empty-row"><td colspan="5">Aucun groupe de comptage.
+        <div class="hint">Cliquez sur « Ajouter un groupe » pour commencer.</div></td></tr>`;
+      return;
+    }
+
+    rows.forEach(g => {
+      const currentVal = store.compte[g.id] || "";
+      const emplLabel = g.emplacements.length
+        ? `<span class="count-pill">${g.emplacements.length} emplacements</span>`
+        : `<span class="count-pill" style="background:var(--line);color:var(--ink-soft);">zone unique</span>`;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="pill">${escapeHtml(g.rayon||"—")}</span></td>
+        <td class="mono">${escapeHtml(g.alle||"—")}</td>
+        <td>${emplLabel}</td>
+        <td>
+          <select class="cell-input" data-compte-id="${g.id}">
+            ${groupOptionsHtml(currentVal)}
+          </select>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-${round} btn-sm btn-launch" data-launch="${g.id}">
+              <span class="ic">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </span>
+              <span class="lbl">LANCER</span>
+            </button>
+            <button class="btn btn-ghost" title="Modifier" data-edit="${g.id}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+            </button>
+            <button class="btn btn-ghost" title="Supprimer" data-del="${g.id}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+            </button>
+          </div>
+        </td>`;
+      e.tbody.appendChild(tr);
+    });
+  }
+
+  function renderAllGrp(){
+    renderGrp("c1");
+    renderGrp("c2");
+  }
+
+  function openForm(round, g){
+    const e = els(round);
+    editingId[round] = g ? g.id : null;
+    e.form.querySelector(".f_rayon").value = g ? g.rayon : "";
+    e.form.querySelector(".f_alle").value = g ? g.alle : "";
+    e.form.querySelector(".f_emplacements").value = g ? g.emplacements.join(", ") : "";
+    e.form.classList.add("show");
+    e.form.querySelector(".f_rayon").focus();
+  }
+  function closeForm(round){
+    const e = els(round);
+    e.form.classList.remove("show");
+    e.form.reset();
+    editingId[round] = null;
+  }
+
+  ["c1","c2"].forEach(round => {
+    const e = els(round);
+
+    document.querySelector(`.btnAddGrp[data-round="${round}"]`).addEventListener("click", ()=> openForm(round, null));
+    e.form.querySelector(".btnCancelGrp").addEventListener("click", ()=> closeForm(round));
+
+    e.form.addEventListener("submit", (ev)=>{
+      ev.preventDefault();
+      const data = {
+        rayon: e.form.querySelector(".f_rayon").value.trim(),
+        alle: e.form.querySelector(".f_alle").value.trim(),
+        emplacements: parseEmplacements(e.form.querySelector(".f_emplacements").value),
+      };
+      if(!data.rayon || !data.alle){ showToast("Rayon et N° ALLE sont requis", true); return; }
+
+      const editId = editingId[round];
+      if(editId){
+        const g = groupes.find(x => x.id === editId);
+        Object.assign(g, data);
+        showToast("Groupe modifié");
+      } else {
+        groupes.unshift({ id: uid(), ...data });
+        showToast("Groupe ajouté");
+      }
+      save(LS_GRP, groupes);
+      renderAllGrp();
+      closeForm(round);
+    });
+
+    e.tbody.addEventListener("click", (ev)=>{
+      const editBtn = ev.target.closest("[data-edit]");
+      const delBtn = ev.target.closest("[data-del]");
+      const launchBtn = ev.target.closest("[data-launch]");
+
+      if(editBtn){
+        const g = groupes.find(x => x.id === editBtn.dataset.edit);
+        if(g) openForm(round, g);
+      }
+      if(delBtn){
+        const id = delBtn.dataset.del;
+        groupes = groupes.filter(x => x.id !== id);
+        delete roundStore.c1.compte[id];
+        delete roundStore.c2.compte[id];
+        save(LS_GRP, groupes);
+        save(LS_COMPTE_C1, roundStore.c1.compte);
+        save(LS_COMPTE_C2, roundStore.c2.compte);
+        renderAllGrp();
+        showToast("Groupe supprimé");
+      }
+      if(launchBtn){
+        const g = groupes.find(x => x.id === launchBtn.dataset.launch);
+        if(g) launchGroup(round, g, launchBtn);
+      }
+    });
+
+    e.tbody.addEventListener("change", (ev)=>{
+      const t = ev.target;
+      if(t.dataset.compteId){
+        roundStore[round].compte[t.dataset.compteId] = t.value;
+        save(roundStore[round].compteKey, roundStore[round].compte);
+      }
+    });
+
+    e.search.addEventListener("input", ()=> renderGrp(round));
+
+    document.querySelector(`.btnResetDefaults[data-round="${round}"]`).addEventListener("click", ()=>{
+      if(!confirm("Recharger les données d'origine du fichier ? Vos groupes ajoutés/modifiés manuellement seront remplacés.")) return;
+      groupes = window.DEFAULT_GROUPS.map(g => ({ id: g.id, rayon: g.rayon, alle: g.alle, emplacements: g.emplacements.slice() }));
+      save(LS_GRP, groupes);
+      renderAllGrp();
+      showToast("Données d'origine rechargées");
+    });
+  });
+
+  /* ================= LANCE : envoi terminal + affichage ================= */
+  const modalBackdrop = document.getElementById("modalBackdrop");
+  const colisList = document.getElementById("colisList");
+  const sendStatusEl = document.getElementById("sendStatus");
+  let currentGroup = null;
+  let currentRound = null;
+  let currentCodes = [];
+
+  const ICON_SEND = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+  const ICON_SPIN = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>`;
+  const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`;
+  const ICON_ERR = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  function setButtonState(btn, state, label){
+    btn.classList.remove("state-sending","state-success","state-error");
+    const ic = btn.querySelector(".ic");
+    const lbl = btn.querySelector(".lbl");
+    if(state === "sending"){ btn.classList.add("state-sending"); ic.innerHTML = ICON_SPIN; lbl.textContent = label || "Envoi..."; btn.disabled = true; }
+    else if(state === "success"){ btn.classList.add("state-success"); ic.innerHTML = ICON_CHECK; lbl.textContent = label || "Envoyé"; }
+    else if(state === "error"){ btn.classList.add("state-error"); ic.innerHTML = ICON_ERR; lbl.textContent = label || "Échec"; }
+    else { ic.innerHTML = ICON_SEND; lbl.textContent = "LANCER"; btn.disabled = false; }
+  }
+
+  async function sendToTerminal(payload){
+    if(!terminal.url){
+      return { ok:false, skipped:true };
+    }
+    try{
+      const controller = new AbortController();
+      const timeout = setTimeout(()=> controller.abort(), 6000);
+      let res;
+      if(terminal.method === "GET_QUERY"){
+        const params = new URLSearchParams({
+          groupe: payload.groupe_comptage || "",
+          round: payload.round,
+          rayon: payload.rayon,
+          alle: payload.alle,
+          nb: String(payload.nb_emplacements),
+          emplacements: payload.emplacements.join(";"),
+        });
+        const sep = terminal.url.includes("?") ? "&" : "?";
+        res = await fetch(terminal.url + sep + params.toString(), { method:"GET", signal: controller.signal });
+      } else {
+        res = await fetch(terminal.url, {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload),
+          signal: controller.signal,
+        });
+      }
+      clearTimeout(timeout);
+      return { ok: res.ok, status: res.status };
+    }catch(err){
+      return { ok:false, error: err.message || String(err) };
+    }
+  }
+
+  async function launchGroup(round, g, btnEl){
+    currentGroup = g;
+    currentRound = round;
+    currentCodes = g.emplacements.length ? g.emplacements.slice() : [g.alle];
+    const store = roundStore[round];
+    const groupeComptage = store.compte[g.id] || "";
+
+    setButtonState(btnEl, "sending");
+
+    const payload = {
+      groupe_comptage: groupeComptage,
+      round: round.toUpperCase(),
+      rayon: g.rayon,
+      alle: g.alle,
+      nb_emplacements: currentCodes.length,
+      emplacements: currentCodes,
+    };
+
+    const result = await sendToTerminal(payload);
+
+    if(result.skipped){
+      setButtonState(btnEl, "error", "Non configuré");
+      showToast("Aucun terminal configuré — ouvrez ⚙ Paramètres pour connecter un terminal", true);
+    } else if(result.ok){
+      setButtonState(btnEl, "success");
+      showToast(`Envoyé au terminal (${g.alle})`);
+    } else {
+      setButtonState(btnEl, "error");
+      showToast("Échec de l'envoi au terminal — vérifiez l'URL et la connexion réseau", true);
+    }
+    setTimeout(()=> setButtonState(btnEl, "idle"), 2600);
+
+    openResultModal(round, g, result, payload);
+  }
+
+  function openResultModal(round, g, result, payload){
+    document.getElementById("modalTitle").textContent = `${g.alle} — Comptage ${round === "c1" ? "N°1" : "N°2"}`;
+    document.getElementById("modalSubtitle").textContent = `Rayon ${g.rayon} · ${payload.groupe_comptage || "aucun groupe assigné"} · ${currentCodes.length} colis`;
+
+    if(result.skipped){
+      sendStatusEl.className = "send-status warn";
+      sendStatusEl.style.display = "flex";
+      sendStatusEl.innerHTML = `${ICON_ERR_INLINE()}<span>Aucun terminal configuré. Liste affichée pour transfert manuel (export / impression).</span>`;
+    } else if(result.ok){
+      sendStatusEl.className = "send-status ok";
+      sendStatusEl.style.display = "flex";
+      sendStatusEl.innerHTML = `${ICON_CHECK_INLINE()}<span>Groupe envoyé avec succès au terminal.</span>`;
+    } else {
+      sendStatusEl.className = "send-status err";
+      sendStatusEl.style.display = "flex";
+      sendStatusEl.innerHTML = `${ICON_ERR_INLINE()}<span>Échec de l'envoi au terminal (${escapeHtml(result.error || ("HTTP " + result.status))}). Liste affichée pour transfert manuel.</span>`;
+    }
+
+    colisList.innerHTML = "";
+    currentCodes.forEach((code, i)=>{
+      const li = document.createElement("li");
+      li.innerHTML = `<span class="n">${i+1}.</span><span>${escapeHtml(code)}</span>`;
+      colisList.appendChild(li);
+    });
+
+    modalBackdrop.classList.add("show");
+  }
+
+  function ICON_CHECK_INLINE(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`; }
+  function ICON_ERR_INLINE(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`; }
+
+  document.getElementById("modalClose").addEventListener("click", ()=> modalBackdrop.classList.remove("show"));
+  modalBackdrop.addEventListener("click", (e)=>{ if(e.target === modalBackdrop) modalBackdrop.classList.remove("show"); });
+
+  document.getElementById("btnCopy").addEventListener("click", ()=>{
+    const text = currentCodes.join(";");
+    navigator.clipboard.writeText(text).then(()=> showToast("Liste copiée dans le presse-papiers"))
+      .catch(()=> showToast("Impossible de copier", true));
+  });
+
+  document.getElementById("btnDownload").addEventListener("click", ()=>{
+    const text = currentCodes.join("\n");
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `colis_${currentGroup.alle.replace(/\s+/g,'_')}_${currentRound}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("Fichier exporté");
+  });
+
+  document.getElementById("btnPrint").addEventListener("click", ()=> window.print());
+
+  /* ---------------- UTILS ---------------- */
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, s => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[s]));
+  }
+  function escapeAttr(str){ return escapeHtml(str); }
+
+  /* ---------------- INIT ---------------- */
+  updateTerminalStatus();
+  renderInv();
+  renderAllGrp();
+})();
+</script>
+</body>
+</html>
